@@ -42,8 +42,8 @@ wget -qO - http://someonewhocares.org/hosts/zero/hosts| \
 rm /etc/hosts 2>/dev/null
 
 # Verbinde Datein in /etc/hosts.d/ zu einer /etc/hosts
-for f in $(ls -1 /etc/hosts.d/); do 
-    cat /etc/hosts.d/$f >> /etc/hosts
+for f in /etc/hosts.d/*; do 
+    cat "${f}" >> /etc/hosts
 done
 
 echo Done
