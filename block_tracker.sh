@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version vom 07.01.2014 
+# Version vom 03.11.2016 
 
 # Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
 # Bevor das Skript benutzt werden kann, müssen folgende Schritte ausgeführt werden:
