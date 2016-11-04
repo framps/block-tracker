@@ -27,5 +27,5 @@ wget -O block-tracker-setup.sh http://pub.atze.libra.uberspace.de/block_tracker_
 Dabei wird die Datei /etc/hosts.d/00-hosts wieder nach /etc/hosts kopiert und das Verzeichnis /etc/hosts.d/ sowie die Datei /usr/local/bin/block-tracker gelöscht.
 
 block-tracker benutzt diese Listen:
-http://someonewhocares.org/hosts/
-http://winhelp2002.mvps.org/
+* http://someonewhocares.org/hosts/
+* http://winhelp2002.mvps.org/
