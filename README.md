@@ -1,10 +1,14 @@
 Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
 
 Zum Installieren, einfach diesen Befehl ausführen:
-  wget -O block-tracker-setup.sh http://pub.atze.libra.uberspace.de/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
+```
+wget -O block-tracker-setup.sh http://pub.atze.libra.uberspace.de/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
+```
 
 Danach kann das Skript mittels
-  sudo block-tracker 
+```
+sudo block-tracker 
+```
 aufgerufen werden.
 
 Das Installationsskript erstellt den Ordner '/etc/hosts.d/' und kopiert die Datei /etc/hosts nach /etc/hosts.d/00-hosts
