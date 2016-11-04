@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version vom 03.11.2016 
+# Version vom 04.11.2016 
 
 # Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
 # Bevor das Skript benutzt werden kann, müssen folgende Schritte ausgeführt werden:
@@ -16,6 +16,10 @@
 # Durch die führenden Zahlen (00, 10, ..) wird bestimmt in welcher Reihenfolge
 # die Dateien zusammengesetzt werden. Man kann das praktisch mit beliebig vielen Dateien machen.
 # 
+
+if [ $UID -ne 0 ]; then
+    echo "Du musst root sein"
+    exit 1
 
 # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
 ( [ -d /etc/hosts.d ] && [ -f /etc/hosts.d/00-hosts ] ) || \
