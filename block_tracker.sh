@@ -20,6 +20,7 @@
 if [ $UID -ne 0 ]; then
     echo "Du musst root sein"
     exit 1
+fi
 
 # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
 ( [ -d /etc/hosts.d ] && [ -f /etc/hosts.d/00-hosts ] ) || \
