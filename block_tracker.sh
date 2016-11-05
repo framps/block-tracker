@@ -8,7 +8,7 @@ fi
 # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
 ( [ -d /etc/hosts.d ] && [ -f /etc/hosts.d/00-hosts ] ) || \
     ( echo Bitte lese die Anweisungen unter \
-    https://gist.github.com/ajacobsen/661af20d1b892fdbe33f08708f7ef03f)
+    https://github.com/ajacobsen/block-tracker)
 
 # Download der hosts Dateien
 # Entfernen von carriage returns
@@ -34,3 +34,4 @@ for f in /etc/hosts.d/*; do
 done
 
 echo Done
+

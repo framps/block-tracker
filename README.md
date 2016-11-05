@@ -1,8 +1,8 @@
 Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
 
-Zum Installieren, einfach diesen Befehl ausführen:
+Zum Installieren, einfach folgenden Befehl ausführen:
 ```
-wget -O block-tracker-setup.sh http://pub.atze.libra.uberspace.de/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
 ```
 
 Danach kann das Skript mittels
@@ -23,10 +23,11 @@ die Dateien zusammengesetzt werden.
 
 Möchte man das Skript wieder deinstallieren, genügt dieser Befehl:
 ```
-wget -O block-tracker-setup.sh http://pub.atze.libra.uberspace.de/block_tracker_setup.sh && sudo bash block-tracker-setup.sh --uninstall
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh --uninstall
 ```
 Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert und das Verzeichnis `/etc/hosts.d/` sowie die Datei `/usr/local/bin/block-tracker` gelöscht.
 
 `block-tracker` benutzt diese Listen:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
+
