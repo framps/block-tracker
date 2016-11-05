@@ -8,11 +8,10 @@ on_error() {
 [ $UID -eq 0 ] || on_error "Du musst root sein"
 
 if [ $# -gt 0 ] && [ $1 == "--uninstall" ]; then
-	echo "Stelle /etc/hosts wider her und "
-	echo "lösche /etc/hosts.d"
+	echo "Stelle /etc/hosts wieder her und lösche /etc/hosts.d"
 	echo "Fortsetzen? [j/N]"
 	read -sn 1 response
-	response=$(echo "${response}" | tr '[:upper:]' '[:lower:]')
+	response=${response,,}
 	[ ${response} == j ] || on_error "Abgebrochen!"
 	echo "Deinstalliere block-tracker..." 
 	cp /etc/hosts.d/00-hosts /etc/hosts
