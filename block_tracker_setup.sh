@@ -12,7 +12,7 @@ if [ $# -gt 0 ] && [ $1 == "--uninstall" ]; then
 	echo "Fortsetzen? [j/N]"
 	read -sn 1 response
 	response=${response,,}
-	[ "${response}" != "j" ] && exit 1	# just quit
+	[ ${response} == j ] || on_error "Abgebrochen!"
 	echo "Deinstalliere block-tracker..." 
 	cp /etc/hosts.d/00-hosts /etc/hosts
 	rm -r /etc/hosts.d/
