@@ -1,4 +1,39 @@
-Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
+<a href="#english">English</a>
+<a href="#german">German</a>
+
+<a name="english"></a>
+This script blocks advertisements by extending the /etc/hosts to block specific websites.
+
+Execute following command to install block-tracker.
+```
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
+```
+
+Now invoke 
+```
+sudo block-tracker 
+```
+to install block-tracker which will create `/etc/hosts.d/` directory and 
+copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
+
+Attention! `block-tracker` will concatenate all files from `/etc/hosts.d/` to one file `/etc/hosts`
+which causes `/etc/hosts` to be overwritten every time when `block-tacker` is invoked.
+To add additional local entries you have to add them in `/etc/hosts.d/00-hosts`
+or you create an addional file called `/etc/hosts.d/01-myhost`
+Leading numbers (00-myhost, 10-myhost, ..) define the sequence the files are concatenated.
+
+To uninstall `block-tracker` just invoke
+```
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh --uninstall
+```
+During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
+
+`block-tracker` uses follwoing lists:
+* http://someonewhocares.org/hosts/
+* http://winhelp2002.mvps.org/
+
+<a name="english"></a>
+Dieses Script blockt vermittels hosts Dateien u.a. Werbung.
 
 Zum Installieren, einfach folgenden Befehl ausführen:
 ```
