@@ -1,5 +1,5 @@
-<a href="#english">README in English</a><br/>
-<a href="#german">README in German</a>
+<a href="#english">Read README in English</a><br/>
+<a href="#german">Read README in German</a>
 
 <a name="english"></a>
 ## English
@@ -17,7 +17,7 @@ sudo block-tracker
 to install block-tracker which will create `/etc/hosts.d/` directory and 
 copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
 
-Attention! `block-tracker` will concatenate all files from `/etc/hosts.d/` to one file `/etc/hosts`
+`block-tracker` will then concatenate all files from `/etc/hosts.d/` to one file `/etc/hosts`
 which causes `/etc/hosts` to be overwritten every time when `block-tacker` is invoked.
 To add additional local entries you have to add them in `/etc/hosts.d/00-hosts`
 or you create an addional file called `/etc/hosts.d/01-myhost`
@@ -32,7 +32,9 @@ During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and dire
 `block-tracker` uses follwoing lists:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
+
 ---
+
 <a name="german"></a>
 ## German
 Dieses Script blockt vermittels hosts Dateien u.a. Werbung.
@@ -50,7 +52,7 @@ aufgerufen werden.
 
 Das Installationsskript erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
 
-Achtung! `block-tracker` fügt alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
+`block-tracker` fügt dann alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
 zusammen, dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben. 
 Um eigene Einträge aufzunehmen, müssen diese entweder in `/etc/hosts.d/00-hosts`
 eingetragen werden, oder man erstellt eine weitere Datei und macht
