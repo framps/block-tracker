@@ -1,7 +1,8 @@
-<a href="#english">English</a>
-<a href="#german">German</a>
+<a href="#english">README in Engish</a>
+<a href="#german">README in German</a>
 
 <a name="english"></a>
+## English
 This script blocks advertisements by extending the /etc/hosts to block specific websites.
 
 Execute following command to install block-tracker.
@@ -31,8 +32,9 @@ During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and dire
 `block-tracker` uses follwoing lists:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
-
-<a name="english"></a>
+---
+<a name="german"></a>
+## German
 Dieses Script blockt vermittels hosts Dateien u.a. Werbung.
 
 Zum Installieren, einfach folgenden Befehl ausführen:
