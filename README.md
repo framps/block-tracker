@@ -1,4 +1,4 @@
-<a href="#english">README in Engish</a>
+<a href="#english">README in English</a><br/>
 <a href="#german">README in German</a>
 
 <a name="english"></a>
