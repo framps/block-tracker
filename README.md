@@ -1,35 +1,44 @@
-*English:*
-`block-tracker` is a script to block ad and tracking services using the hosts file.
+* <a href="#english">Read README in English</a><br/>
+* <a href="#german">Read README in German</a>
 
-Run the following command to install it:
+<a name="english"></a>
+## English
+This script blocks advertisements by extending the /etc/hosts to block specific websites.
+
+Execute following command to install block-tracker.
 ```
 wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh
 ```
 
-After installation block-tracker can be run using the following command:
+Now invoke
 ```
 sudo block-tracker
 ```
-It is needed to run `block-tracker` at least once after installation and highly adivesed to run it frequently to keep the block lists up to date.
 
-The installer creates the folder `/etc/hosts.d/` and copies the file `/etc/hosts` to `/etc/hosts.d/00-hosts`
-When the installer is run using the option `--uninstall` it copies the file back and deletes the folder.
+The installation script block-tracker-setup.sh will create `/etc/hosts.d/` directory and 
+copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
 
-Each time `block-tracker` runs it concatenates every file in `/etc/hosts.d/` to one file and overwrites `/etc/hosts` with the new content.
-In order to make your own changes to this file you should do so either in `/etc/hosts.d/00-hosts` or create a new file file, i.e. `/etc/hosts.d/01-myfile`.
+*Note:* `block-tracker` will concatenate all files from `/etc/hosts.d/` into one file `/etc/hosts`
+which causes `/etc/hosts` to be overwritten every time when `block-tacker` is invoked.
+To add additional local entries which will not be overwritten you have to add them in `/etc/hosts.d/00-hosts`
+or you create an addional file called `/etc/hosts.d/01-myhost`
+Leading numbers (00, 01, ..) define the sequence the files will be concatenated.
 
-To uninstall `block-tracker` run the following command:
+To uninstall `block-tracker` just invoke
 ```
 wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker_setup.sh && sudo bash block-tracker-setup.sh --uninstall
 ```
-Please note: This restors `/etc/hosts` from `/etc/hosts.d/00-hosts` and deletes the folder `/etc/hosts.d/`. Make sure to save any files you created there.
+During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
 
-`block-tracker` uses the following lists:
+`block-tracker` uses follwoing lists:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
 
-*German/Deutsch:*
-Dies ist ein Skript, um u.a. Werbung mittels der hosts Datei zu blocken.
+---
+
+<a name="german"></a>
+## German
+Dieses Script blockt vermittels hosts Dateien u.a. Werbung.
 
 Zum Installieren, einfach folgenden Befehl ausführen:
 ```
@@ -42,14 +51,14 @@ sudo block-tracker
 ```
 aufgerufen werden.
 
-Das Installationsskript erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
+Das Installationsskript block-tracker-setup.sh erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
 
-Achtung! `block-tracker` fügt alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
-zusammen, dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben.
-Um eigene Einträge aufzunehmen, müssen diese entweder in `/etc/hosts.d/00-hosts`
-eingetragen werden, oder man erstellt eine weitere Datei und macht
+*Hinweis:* `block-tracker` fügt dann alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
+zusammen und dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben. 
+Um eigene Einträge aufzunehmen die nicht überschrieben werden, müssen diese entweder in `/etc/hosts.d/00-hosts`
+eingetragen werden oder man erstellt eine weitere Datei und macht
 dort die gewünschten Einträge. Z.B. `/etc/hosts.d/01-meinedatei`
-Durch die führenden Zahlen (00, 10, ..) wird bestimmt in welcher Reihenfolge
+Durch die führenden Zahlen (00, 01, ..) wird bestimmt in welcher Reihenfolge
 die Dateien zusammengesetzt werden.
 
 Möchte man das Skript wieder deinstallieren, genügt dieser Befehl:
@@ -61,3 +70,4 @@ Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert un
 `block-tracker` benutzt diese Listen:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
+
