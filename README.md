@@ -14,7 +14,8 @@ Now invoke
 ```
 sudo block-tracker 
 ```
-to install block-tracker which will create `/etc/hosts.d/` directory and 
+
+The installation script block-tracker-setup.sh will create `/etc/hosts.d/` directory and 
 copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
 
 *Note:* `block-tracker` will concatenate all files from `/etc/hosts.d/` into one file `/etc/hosts`
@@ -50,7 +51,7 @@ sudo block-tracker
 ```
 aufgerufen werden.
 
-Das Installationsskript erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
+Das Installationsskript block-tracker-setup.sh erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
 
 *Hinweis:* `block-tracker` fügt dann alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
 zusammen und dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben. 
