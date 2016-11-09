@@ -15,7 +15,7 @@ Now invoke
 sudo block-tracker
 ```
 
-The installation script block-tracker-setup.sh will create `/etc/hosts.d/` directory and 
+The installation script block-tracker-setup.sh will create `/etc/hosts.d/` directory and
 copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
 
 *Note:* `block-tracker` will concatenate all files from `/etc/hosts.d/` into one file `/etc/hosts`
@@ -33,6 +33,8 @@ During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and dire
 `block-tracker` uses follwoing lists:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
+* http://sysctl.org
+* http://pgl.yoyo.org
 
 ---
 
@@ -54,7 +56,7 @@ aufgerufen werden.
 Das Installationsskript block-tracker-setup.sh erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
 
 *Hinweis:* `block-tracker` fügt dann alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
-zusammen und dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben. 
+zusammen und dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben.
 Um eigene Einträge aufzunehmen die nicht überschrieben werden, müssen diese entweder in `/etc/hosts.d/00-hosts`
 eingetragen werden oder man erstellt eine weitere Datei und macht
 dort die gewünschten Einträge. Z.B. `/etc/hosts.d/01-meinedatei`
@@ -70,4 +72,5 @@ Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert un
 `block-tracker` benutzt diese Listen:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
-
+* http://sysctl.org
+* http://pgl.yoyo.org
