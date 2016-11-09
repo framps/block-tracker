@@ -16,7 +16,7 @@ sudo block-tracker
 ```
 
 The installation script block-tracker-setup.sh will create `/etc/hosts.d/` directory and
-copies `/etc/hosts` to `/etc/hosts.d/00-hosts`
+copies `/etc/hosts` to `/etc/hosts.d/00-hosts`.
 
 *Note:* `block-tracker` will concatenate all files from `/etc/hosts.d/` into one file `/etc/hosts`
 which causes `/etc/hosts` to be overwritten every time when `block-tacker` is invoked.
@@ -30,7 +30,7 @@ wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block
 ```
 During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
 
-`block-tracker` uses follwoing lists:
+`block-tracker` uses following lists:
 * http://someonewhocares.org/hosts/
 * http://winhelp2002.mvps.org/
 * http://sysctl.org
