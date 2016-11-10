@@ -63,7 +63,7 @@ for f in /etc/hosts.d/*; do
     cat "${f}" >> "${tmpfile}"
 done
 
-sed -e 's/#.*$//' "${tmpfile}"| sort -u  >> /etc/hosts
+sed -e 's/#.*$//' -e 's/[ \t]*$//' "${tmpfile}"| sort -u  >> /etc/hosts
 rm ${tmpfile}
 
 echo Done
