@@ -40,19 +40,22 @@ fi
 # Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
 # Entfernen von Leerzeilen
 wget -qO - "http://winhelp2002.mvps.org/hosts.txt"| \
-    sed -e 's/\r//' -e '/^127/d' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d'|\
+    sed -e 's/\r//' -e '/^0/!d' -e 's/#.*$//'|\
     sort -u > "/etc/hosts.d/10-mvpblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://winhelp2002.mvps.org/hosts.txt"
+
 wget -qO - "http://someonewhocares.org/hosts/zero/hosts"| \
-    sed -e 's/\r//' -e '/^127/d' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d'|\
+    sed -e '/^0/!d' -e 's/#.*$//'|\
     sort -u > "/etc/hosts.d/20-some1whocaresblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://someonewhocares.org/hosts/zero/hosts"
+
 wget -qO - "http://sysctl.org/cameleon/hosts"| \
-    sed -e 's/\r//' -e 's/127.0.0.1/0.0.0.0/' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d' -e 's/[\t]/ /g' -e 's/  / /g'|\
+    sed -e '/^127.0.0.1.*localhost$/d' -e 's/^127.0.0.1/0.0.0.0/' -e 's/[\t]//g' -e '/^0/!d'|\
     sort -u > "/etc/hosts.d/30-sysctlblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"
+
 wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"| \
-    sed -e 's/\r//' -e 's/127.0.0.1/0.0.0.0/' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d'|\
+    sed -e 's/^127.0.0.1/0.0.0.0/' -e '/^0/!d'|\
     sort -u > "/etc/hosts.d/40-yoyo.orgblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
 
