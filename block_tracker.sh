@@ -48,7 +48,7 @@ wget -qO - "http://someonewhocares.org/hosts/zero/hosts"| \
     sort -u > "/etc/hosts.d/20-some1whocaresblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://someonewhocares.org/hosts/zero/hosts"
 wget -qO - "http://sysctl.org/cameleon/hosts"| \
-    sed -e 's/\r//' -e 's/127.0.0.1/0.0.0.0/' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d'|\
+    sed -e 's/\r//' -e 's/127.0.0.1/0.0.0.0/' -e '/^255.255.255.255/d' -e '/::1/d' -e 's/#.*$//' -e '/^0.0.0.0/!d' -e '/^$/d' -e 's/[\t]/ /g' -e 's/  / /g'|\
     sort -u > "/etc/hosts.d/30-sysctlblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"
 wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"| \
