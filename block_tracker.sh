@@ -9,7 +9,8 @@ MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
 MSG_README_HINT=2
 MSG_EN[$MSG_README_HINT]="Please read the instructions at https://github.com/ajacobsen/block-tracker"
 MSG_DE[$MSG_README_HINT]="Bitte lese die Anweisungen unter https://github.com/ajacobsen/block-tracker"
-
+MSG_DISABLED_SUCCES=3
+MSG_EN[$MSG_DISABLED_SUCCES]="block-tracker is now disabled"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
@@ -27,6 +28,12 @@ write_to_console() { #messagenumber #parm1 ... parmn
 if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
     exit 1
+fi
+
+if [ $# -gt 0 ] && [ $1 == "--disable" ]; then
+    cp /etc/hosts.d/00-hosts /etc/hosts
+    write_to_console "${MSG_DISABLED_SUCCES}"
+    exit 0
 fi
 
 # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
