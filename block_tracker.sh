@@ -45,15 +45,17 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
+# Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
+if ([ ! -d /etc/hosts.d ] && [ ! -f /etc/hosts.d/00-hosts ]); then
+    write_to_console "${MSG_README_HINT}"
+    exit 2
+fi
+
 if [ $# -gt 0 ] && [ $1 == "--disable" ]; then
     cp /etc/hosts.d/00-hosts /etc/hosts
     write_to_console "${MSG_DISABLED_SUCCESS}"
     exit 0
 fi
-
-# Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
-( [ -d /etc/hosts.d ] && [ -f /etc/hosts.d/00-hosts ] ) || \
-    ( write_to_console "${MSG_README_HINT}")
 
 # Download der hosts Dateien
 # Entfernen von carriage returns
