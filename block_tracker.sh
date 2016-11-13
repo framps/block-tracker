@@ -1,33 +1,41 @@
 #!/bin/bash
 
-MSG_DOWNLOAD_FAILED=0
+MSG_UNDEFINED=0
+MSG_EN[$MSG_UNDEFINED]="Undefined message. Pease report this error."
+MSG_DE[$MSG_UNDEFINED]="Unbekannte Meldung. Bitte melde diesen Fehler."
+MSG_DOWNLOAD_FAILED=1
 MSG_EN[$MSG_DOWNLOAD_FAILED]="WARNING! Failed to download %b!"
 MSG_DE[$MSG_DOWNLOAD_FAILED]="WARNUNG! Download von %b fehlgeschlagen!"
-MSG_NOT_ROOT=1
+MSG_NOT_ROOT=2
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
-MSG_README_HINT=2
+MSG_README_HINT=3
 MSG_EN[$MSG_README_HINT]="Please read the instructions at https://github.com/ajacobsen/block-tracker"
 MSG_DE[$MSG_README_HINT]="Bitte lese die Anweisungen unter https://github.com/ajacobsen/block-tracker"
-MSG_DISABLED_SUCCESS=3
+MSG_DISABLED_SUCCESS=4
 MSG_EN[$MSG_DISABLED_SUCCESS]="block-tracker is now disabled"
 MSG_DE[$MSG_DISABLED_SUCCESS]="block-tracker ist nun ausgeschaltet"
-MSG_PROCESSING_URL=4
+MSG_PROCESSING_URL=5
 MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
 MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
-MSG_FINISHED_GENERATING=5
+MSG_FINISHED_GENERATING=6
 MSG_EN[$MSG_FINISHED_GENERATING]="Finished creating %b"
 MSG_DE[$MSG_FINISHED_GENERATING]="%b wurde erstellt"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
-write_to_console() { #messagenumber #parm1 ... parmn
+write_to_console() { #messagenumber parm1 ... parmn
     local msgv
     local msg
-    msgv="$MSGVAR[$1]"
+    local msgn
+    msgn=$1
+    if [ -z $1 ]; then
+        msgn=0
+    fi
+    msgv="$MSGVAR[$msgn]"
     msg=${!msgv}
     if [ -z "${msg}" ]; then
-      msg="${MSG_EN[$1]}"
+      msg="${MSG_EN[$msgn]}"
     fi
     printf "${msg}\n" "${@:2}"
 }
@@ -73,7 +81,7 @@ wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&m
     sed -e 's/^127.0.0.1/0.0.0.0/' -e '/^0/!d' > "/etc/hosts.d/40-yoyo.orgblocklist" || \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
 
-# Insert comment 
+# Insert comment
 # Concatenate files
 # Remove leading and trailing spaces
 # Eliminate duplicates
