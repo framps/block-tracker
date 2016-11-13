@@ -77,9 +77,9 @@ wget -qO - "http://sysctl.org/cameleon/hosts"| \
     write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"
 
 write_to_console "${MSG_PROCESSING_URL}" "http://pgl.yoyo.org"
-wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"| \
-    sed -e 's/^127.0.0.1/0.0.0.0/' -e '/^0/!d' > "/etc/hosts.d/40-yoyo.orgblocklist" || \
-    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
+wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"| \
+    sed -e '/^0/!d' > "/etc/hosts.d/40-yoyo.orgblocklist" || \
+    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"
 
 # Insert comment
 # Concatenate files
