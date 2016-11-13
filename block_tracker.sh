@@ -48,7 +48,7 @@ fi
 # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
 if ([ ! -d /etc/hosts.d ] || [ ! -f /etc/hosts.d/00-hosts ]); then
     write_to_console "${MSG_README_HINT}"
-    exit 2
+    exit 1
 fi
 
 if [ $# -gt 0 ] && [ $1 == "--disable" ]; then
