@@ -22,8 +22,8 @@ MSG_PROCESSING_INSTALL=6
 MSG_EN[$MSG_PROCESSING_INSTALL]="Installing block-tracker..."
 MSG_DE[$MSG_PROCESSING_INSTALL]="Installiere block-tracker..."
 MSG_INSTALL_SUCCESS=7
-MSG_EN[$MSG_INSTALL_SUCCESS]="Installed to %b"
-MSG_DE[$MSG_INSTALL_SUCCESS]="Installiert nach %b"
+MSG_EN[$MSG_INSTALL_SUCCESS]="Installation in %b finished"
+MSG_DE[$MSG_INSTALL_SUCCESS]="Installation in %b beendet"
 MSG_YES_NO=8
 MSG_EN[$MSG_YES_NO]="y/N"
 MSG_DE[$MSG_YES_NO]="j/N"
@@ -35,6 +35,7 @@ MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
 INSTALL_PATH="/usr/local/bin"
 INSTALL_NAME="block_tracker"
+EXECUTABLE_NAME=${INSTALL_NAME/_/-}						# executable has hypen instead of underscore !!!
 
 get_message() { #messagenumber
     local msgv
@@ -64,8 +65,8 @@ if [ $UID -ne 0 ]; then
 fi
 
 if [ $# -gt 0 ] && [ $1 == "--uninstall" ]; then
-	if [[ ! -f "${INSTALL_PATH}/{$INSTALL_NAME}" ]]; then
-		write_to_console "${MSG_NOT_INSTALLED}" "${INSTALL_NAME}"
+	if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
 		exit 1
 	fi
 	yesno=$(get_message "${MSG_YES_NO}")
@@ -79,12 +80,12 @@ if [ $# -gt 0 ] && [ $1 == "--uninstall" ]; then
 	write_to_console "${MSG_PROCESSING_UNINSTALL}"
 	cp /etc/hosts.d/00-hosts /etc/hosts
 	rm -r /etc/hosts.d/
-	rm "${INSTALL_PATH}/{$INSTALL_NAME}"
+	rm "${INSTALL_PATH}/${EXECUTABLE_NAME}"
 	write_to_console "${MSG_DONE}"
 else
 	write_to_console "${MSG_PROCESSING_INSTALL}"
 	mkdir /etc/hosts.d 2>/dev/null && cp /etc/hosts /etc/hosts.d/00-hosts
-	wget -qO "${INSTALL_PATH}/{$INSTALL_NAME}" https://raw.githubusercontent.com/ajacobsen/block-tracker/master/{$INSTALL_NAME}.sh
-	chmod +x "${INSTALL_PATH}/{$INSTALL_NAME}"
-	write_to_console "${MSG_INSTALL_SUCCESS}" "${INSTALL_PATH}/${INSTALL_NAME}"
+	wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" https://raw.githubusercontent.com/ajacobsen/block-tracker/master/${INSTALL_NAME}.sh
+	chmod +x "${INSTALL_PATH}/${EXECUTABLE_NAME}"
+	write_to_console "${MSG_INSTALL_SUCCESS}" "${INSTALL_PATH}"
 fi
