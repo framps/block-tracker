@@ -1,43 +1,218 @@
 #!/bin/bash
 
-MSG_UNDEFINED=0
-MSG_EN[$MSG_UNDEFINED]="Undefined message. Pease report this error."
-MSG_DE[$MSG_UNDEFINED]="Unbekannte Meldung. Bitte melde diesen Fehler."
-MSG_DOWNLOAD_FAILED=1
+set -eu -o pipefail										# see https://sipb.mit.edu/doc/safe-shell/
+
+# various constants
+
+INSTALL_PATH="/usr/local/bin"
+INSTALL_NAME="block_tracker"
+EXECUTABLE_NAME=${INSTALL_NAME/_/-}						# executable has hypen instead of underscore !!!
+GITHUB_URL="github.com"
+GITHUB_RAW_URL="raw.githubusercontent.com"
+GITHUB_REPO="ajacobsen/block-tracker"
+GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
+GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/master/${INSTALL_NAME}.sh"
+ETC_HOSTS_D_DIR="/etc/hosts.d"
+ETC_HOSTS="/etc/hosts"
+
+# runtime messages
+
+MSG_CNT=0
+MSG_DOWNLOAD_FAILED=$((MSG_CNT++))
 MSG_EN[$MSG_DOWNLOAD_FAILED]="WARNING! Failed to download %b!"
 MSG_DE[$MSG_DOWNLOAD_FAILED]="WARNUNG! Download von %b fehlgeschlagen!"
-MSG_NOT_ROOT=2
+MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
-MSG_README_HINT=3
-MSG_EN[$MSG_README_HINT]="Please read the instructions at https://github.com/ajacobsen/block-tracker"
-MSG_DE[$MSG_README_HINT]="Bitte lese die Anweisungen unter https://github.com/ajacobsen/block-tracker"
-MSG_DISABLED_SUCCESS=4
-MSG_EN[$MSG_DISABLED_SUCCESS]="block-tracker is now disabled"
-MSG_DE[$MSG_DISABLED_SUCCESS]="block-tracker ist nun ausgeschaltet"
-MSG_PROCESSING_URL=5
+MSG_README_HINT=$((MSG_CNT++))
+MSG_EN[$MSG_README_HINT]="Please read the instructions at ${GIT_REPO_URL}"
+MSG_DE[$MSG_README_HINT]="Bitte lese die Anweisungen auf ${GIT_REPO_URL}"
+MSG_DISABLED_SUCCESS=$((MSG_CNT++))
+MSG_EN[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} is now disabled"
+MSG_DE[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun ausgeschaltet"
+MSG_PROCESSING_URL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
 MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
-MSG_FINISHED_GENERATING=6
+MSG_FINISHED_GENERATING=$((MSG_CNT++))
 MSG_EN[$MSG_FINISHED_GENERATING]="Finished creating %b"
 MSG_DE[$MSG_FINISHED_GENERATING]="%b wurde erstellt"
 
+# Messages for installer
+
+MSG_CNT=100
+MSG_CONFIRM_UNINSTALL=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIRM_UNINSTALL]="Restoring ${ETC_HOSTS} and deleting ${ETC_HOSTS_D_DIR}\\nContinue? [%b]"
+MSG_DE[$MSG_CONFIRM_UNINSTALL]="Stelle ${ETC_HOSTS} wieder her und lösche ${ETC_HOSTS_D_DIR}\\nFortsetzen? [%b]"
+MSG_PROCESSING_UNINSTALL=$((MSG_CNT++))
+MSG_EN[$MSG_PROCESSING_UNINSTALL]="Uninstalling %b ..."
+MSG_DE[$MSG_PROCESSING_UNINSTALL]="Deinstalliere %b ..."
+MSG_UNINSTALL_SUCCESS=$((MSG_CNT++))
+MSG_EN[$MSG_UNINSTALL_SUCCESS]="Uninstall of %b finished"
+MSG_DE[$MSG_UNINSTALL_SUCCESS]="Deinstallation von %b beendet"
+MSG_PROCESSING_INSTALL=$((MSG_CNT++))
+MSG_EN[$MSG_PROCESSING_INSTALL]="Installing %b ..."
+MSG_DE[$MSG_PROCESSING_INSTALL]="Installiere %b ..."
+MSG_INSTALL_SUCCESS=$((MSG_CNT++))
+MSG_EN[$MSG_INSTALL_SUCCESS]="Installation of %b in %b finished"
+MSG_DE[$MSG_INSTALL_SUCCESS]="Installation von %b in %b beendet"
+MSG_YES_NO=$((MSG_CNT++))
+MSG_EN[$MSG_YES_NO]="y/N"
+MSG_DE[$MSG_YES_NO]="j/N"
+MSG_NOT_INSTALLED=$((MSG_CNT++))
+MSG_EN[$MSG_NOT_INSTALLED]="%b is not installed"
+MSG_DE[$MSG_NOT_INSTALLED]="%b ist nicht installiert"
+MSG_ALREADY_INSTALLED=$((MSG_CNT++))
+MSG_EN[$MSG_ALREADY_INSTALLED]="%b is already installed"
+MSG_DE[$MSG_ALREADY_INSTALLED]="%b ist schon installiert"
+
+# common messages
+
+MSG_CNT=200
+MSG_UNKNOWN_OPTION=$((MSG_CNT++))
+MSG_EN[$MSG_UNKNOWN_OPTION]="Unknown option %b"
+MSG_DE[$MSG_UNKNOWN_OPTION]="Unbekannte Option %b"
+MSG_UNDEFINED=$((MSG_CNT++))
+MSG_EN[$MSG_UNDEFINED]="Undefined message number %b. Please report this error."
+MSG_DE[$MSG_UNDEFINED]="Unbekannte Meldungsnummer %b. Bitte melde diesen Fehler."
+MSG_NOT_IMPLEMENTED=$((MSG_CNT++))
+MSG_EN[$MSG_NOT_IMPLEMENTED]="Function %b not implemented right now. Feel free to implement this function in $GIT_REPO_URL"
+MSG_DE[$MSG_NOT_IMPLEMENTED]="Funktion %b noch nicht implementiert. Implementiere sie einfach in $GIT_REPO_URL"
+MSG_ABORTED=$((MSG_CNT++))
+MSG_EN[$MSG_ABORTED]="Program aborted"
+MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
+MSG_NOT_ROOT=$((MSG_CNT++))
+MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
+MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
+MSG_HELP=$((MSG_CNT++))
+MSG_EN[$MSG_HELP]="Possible options: -i (install), -u (uninstall), -d (disable), -r (install and execute), no option (execute)"
+MSG_DE[$MSG_HELP]="Mögliche Optionen: -i (installier), -u (deinstallier), -d (ausschalten), -r (installiere und ausführen), keine Option (ausführen)"
+
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
-write_to_console() { #messagenumber parm1 ... parmn
-    local msgv
-    local msg
-    local msgn
+function abort() {
+	write_to_console "${MSG_ABORTED}"
+	exit 42
+}
+
+function uninstall() {
+	if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi
+	
+	yesno=$(get_message "${MSG_YES_NO}")
+	write_to_console "${MSG_CONFIRM_UNINSTALL}" "$yesno"
+	read -sn 1 response
+	response=${response,,}
+	yesno=${yesno,,}
+	if [[ ${response} != ${yesno:0:1} ]]; then
+		exit 0
+	fi
+	
+	write_to_console "${MSG_PROCESSING_UNINSTALL}" "${EXECUTABLE_NAME}"
+	cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
+	rm -r ${ETC_HOSTS_D_DIR}
+	rm "${INSTALL_PATH}/${EXECUTABLE_NAME}"
+	write_to_console "${MSG_UNINSTALL_SUCCESS}" "${INSTALL_PATH}/${EXECUTABLE_NAME}"
+}
+
+function install() {
+	if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+		write_to_console "${MSG_ALREADY_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi
+	
+	write_to_console "${MSG_PROCESSING_INSTALL}" "${EXECUTABLE_NAME}"
+	mkdir ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/00-hosts
+	wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${GIT_INSTALL_URL}" || \
+		( write_to_console "${MSG_DOWNLOAD_FAILED}" "$GIT_INSTALL_URL}"; abort )
+	chmod +x "${INSTALL_PATH}/${EXECUTABLE_NAME}"
+	write_to_console "${MSG_INSTALL_SUCCESS}" "${EXECUTABLE_NAME}" "${INSTALL_PATH}"
+}
+
+function disable() {
+	# Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
+	if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
+		write_to_console "${MSG_README_HINT}"
+		abort
+	fi
+
+	cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
+	write_to_console "${MSG_DISABLED_SUCCESS}"
+}
+
+function enable() { 
+	write_to_console "${MSG_NOT_IMPLEMENTED}" "${FUNCNAME}"	# TBD
+}
+
+function help() { 
+	write_to_console "${MSG_HELP}"							# TBD
+}
+
+function execute () {
+	
+	if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi 
+	
+	# Download der hosts Dateien
+	# Entfernen von carriage returns
+	# Entfernen von localhost und broadcast Adressen
+	# Entfernen von allen Kommentaren
+	# Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
+	# Entfernen von Leerzeilen
+	write_to_console "${MSG_PROCESSING_URL}" "http://winhelp2002.mvps.org"
+	wget -qO - "http://winhelp2002.mvps.org/hosts.txt"| \
+	    sed -e 's/\r//' -e '/^0/!d' -e 's/#.*$//'> "${ETC_HOSTS_D_DIR}/10-mvpblocklist" || \
+	    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://winhelp2002.mvps.org/hosts.txt"; abort )
+	
+	write_to_console "${MSG_PROCESSING_URL}" "http://someonewhocares.org"
+	wget -qO - "http://someonewhocares.org/hosts/zero/hosts"| \
+	    sed -e '/^0/!d' -e 's/#.*$//' > "${ETC_HOSTS_D_DIR}/20-some1whocaresblocklist" || \
+	    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://someonewhocares.org/hosts/zero/hosts"; abort )
+	
+	write_to_console "${MSG_PROCESSING_URL}" "http://sysctl.org"
+	wget -qO - "http://sysctl.org/cameleon/hosts"| \
+	    sed -e '/^127.0.0.1.*localhost$/d' -e 's/^127.0.0.1/0.0.0.0/' -e 's/[\t]//g' -e '/^0/!d' > "${ETC_HOSTS_D_DIR}/30-sysctlblocklist" || \
+	    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"; abort )
+	
+	write_to_console "${MSG_PROCESSING_URL}" "http://pgl.yoyo.org"
+	wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"| \
+	    sed -e '/^0/!d' > "${ETC_HOSTS_D_DIR}/40-yoyo.orgblocklist" || \
+	    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"; abort )
+	
+	# Insert comment
+	# Concatenate files
+	# Remove leading and trailing spaces
+	# Eliminate duplicates
+	printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there" > ${ETC_HOSTS}
+	cat ${ETC_HOSTS_D_DIR}/* | sed -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${ETC_HOSTS}
+	
+	write_to_console "${MSG_FINISHED_GENERATING}" "${ETC_HOSTS}"
+}
+
+function get_message() { #messagenumber
+    local msgv msg msgn
     msgn=$1
-    if [ -z $1 ]; then
-        msgn=0
-    fi
+    [ -z ${msgn} ] && msgn=${MSG_UNDEFINED}
     msgv="$MSGVAR[$msgn]"
     msg=${!msgv}
     if [ -z "${msg}" ]; then
       msg="${MSG_EN[$msgn]}"
     fi
-    printf "${msg}\n" "${@:2}"
+    echo "$msg"
+}
+
+function write_to_console() { #messagenumber parm1 ... parmn
+    local msgv msg msgn
+    msgn=$1
+	msg=$(get_message "$msgn")
+	[ -z "${msg}" ] && msg=$(get_message "$MSG_UNDEFINED")
+	printf "${msg}\n" "${@:2}"
 }
 
 if [ $UID -ne 0 ]; then
@@ -45,50 +220,21 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
-# Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
-if ([ ! -d /etc/hosts.d ] || [ ! -f /etc/hosts.d/00-hosts ]); then
-    write_to_console "${MSG_README_HINT}"
-    exit 1
+if [ $# -gt 0 ]; then
+	case "$1" in
+	
+		--disable|-d) disable ;;
+		--install|-i) install ;;
+		--run|-r) install && execute ;;
+		--uninstall|-u) uninstall ;;
+		--help|-h) help	;;
+		
+		*)
+			write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
+			help
+			exit 1
+			;;
+	esac
+else
+	execute	
 fi
-
-if [ $# -gt 0 ] && [ $1 == "--disable" ]; then
-    cp /etc/hosts.d/00-hosts /etc/hosts
-    write_to_console "${MSG_DISABLED_SUCCESS}"
-    exit 0
-fi
-
-# Download der hosts Dateien
-# Entfernen von carriage returns
-# Entfernen von localhost und broadcast Adressen
-# Entfernen von allen Kommentaren
-# Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
-# Entfernen von Leerzeilen
-write_to_console "${MSG_PROCESSING_URL}" "http://winhelp2002.mvps.org"
-wget -qO - "http://winhelp2002.mvps.org/hosts.txt"| \
-    sed -e 's/\r//' -e '/^0/!d' -e 's/#.*$//'> "/etc/hosts.d/10-mvpblocklist" || \
-    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://winhelp2002.mvps.org/hosts.txt"
-
-write_to_console "${MSG_PROCESSING_URL}" "http://someonewhocares.org"
-wget -qO - "http://someonewhocares.org/hosts/zero/hosts"| \
-    sed -e '/^0/!d' -e 's/#.*$//' > "/etc/hosts.d/20-some1whocaresblocklist" || \
-    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://someonewhocares.org/hosts/zero/hosts"
-
-write_to_console "${MSG_PROCESSING_URL}" "http://sysctl.org"
-wget -qO - "http://sysctl.org/cameleon/hosts"| \
-    sed -e '/^127.0.0.1.*localhost$/d' -e 's/^127.0.0.1/0.0.0.0/' -e 's/[\t]//g' -e '/^0/!d' > "/etc/hosts.d/30-sysctlblocklist" || \
-    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"
-
-write_to_console "${MSG_PROCESSING_URL}" "http://pgl.yoyo.org"
-wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"| \
-    sed -e '/^0/!d' > "/etc/hosts.d/40-yoyo.orgblocklist" || \
-    write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"
-
-# Insert comment
-# Concatenate files
-# Remove leading and trailing spaces
-# Eliminate duplicates
-printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at /etc/hosts.d/00-hosts you should make any changes there" > /etc/hosts
-cat /etc/hosts.d/* | sed -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> /etc/hosts
-
-write_to_console "${MSG_FINISHED_GENERATING}" "/etc/hosts"
-exit 0
