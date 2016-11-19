@@ -10,6 +10,7 @@ EXECUTABLE_NAME=${INSTALL_NAME/_/-}						# executable has hypen instead of under
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_REPO="ajacobsen/block-tracker"
+GITHUB_REPO="framps/block-tracker"
 GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
 GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/master/${INSTALL_NAME}.sh"
 ETC_HOSTS_D_DIR="/etc/hosts.d"
@@ -30,24 +31,24 @@ MSG_DE[$MSG_README_HINT]="Bitte lese die Anweisungen auf ${GIT_REPO_URL}"
 MSG_DISABLED_SUCCESS=$((MSG_CNT++))
 MSG_EN[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} is now disabled"
 MSG_DE[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun ausgeschaltet"
+MSG_ENABLED_SUCCESS=$((MSG_CNT++))
+MSG_EN[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} is now enabled"
+MSG_DE[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun eingeschaltet"
 MSG_PROCESSING_URL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
 MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
-MSG_FINISHED_GENERATING=$((MSG_CNT++))
-MSG_EN[$MSG_FINISHED_GENERATING]="Finished creating %b"
-MSG_DE[$MSG_FINISHED_GENERATING]="%b wurde erstellt"
 
 # Messages for installer
 
 MSG_CNT=100
 MSG_CONFIRM_UNINSTALL=$((MSG_CNT++))
-MSG_EN[$MSG_CONFIRM_UNINSTALL]="Restoring ${ETC_HOSTS} and deleting ${ETC_HOSTS_D_DIR}\\nContinue? [%b]"
-MSG_DE[$MSG_CONFIRM_UNINSTALL]="Stelle ${ETC_HOSTS} wieder her und lösche ${ETC_HOSTS_D_DIR}\\nFortsetzen? [%b]"
+MSG_EN[$MSG_CONFIRM_UNINSTALL]="Restoring ${ETC_HOSTS} and deleting ${ETC_HOSTS_D_DIR}? [%b] "
+MSG_DE[$MSG_CONFIRM_UNINSTALL]="Stelle ${ETC_HOSTS} wieder her und lösche ${ETC_HOSTS_D_DIR}? [%b] "
 MSG_PROCESSING_UNINSTALL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_UNINSTALL]="Uninstalling %b ..."
 MSG_DE[$MSG_PROCESSING_UNINSTALL]="Deinstalliere %b ..."
 MSG_UNINSTALL_SUCCESS=$((MSG_CNT++))
-MSG_EN[$MSG_UNINSTALL_SUCCESS]="Uninstall of %b finished"
+MSG_EN[$MSG_UNINSTALL_SUCCESS]="Uninstallation of %b finished"
 MSG_DE[$MSG_UNINSTALL_SUCCESS]="Deinstallation von %b beendet"
 MSG_PROCESSING_INSTALL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_INSTALL]="Installing %b ..."
@@ -64,6 +65,9 @@ MSG_DE[$MSG_NOT_INSTALLED]="%b ist nicht installiert"
 MSG_ALREADY_INSTALLED=$((MSG_CNT++))
 MSG_EN[$MSG_ALREADY_INSTALLED]="%b is already installed"
 MSG_DE[$MSG_ALREADY_INSTALLED]="%b ist schon installiert"
+MSG_REINSTALL=$((MSG_CNT++))
+MSG_EN[$MSG_REINSTALL]="%b upgraden? [%b] "
+MSG_DE[$MSG_REINSTALL]="%Neuer Version von %b installieren? [%b] "
 
 # common messages
 
@@ -84,8 +88,8 @@ MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
 MSG_HELP=$((MSG_CNT++))
-MSG_EN[$MSG_HELP]="Possible options: -i (install), -u (uninstall), -d (disable), -r (install and execute), no option (execute)"
-MSG_DE[$MSG_HELP]="Mögliche Optionen: -i (installier), -u (deinstallier), -d (ausschalten), -r (installiere und ausführen), keine Option (ausführen)"
+MSG_EN[$MSG_HELP]="Possible options: -i (install), -u (uninstall), -e (enable), -d (disable), -r (install and enable), no option (refresh blacklist and enable)"
+MSG_DE[$MSG_HELP]="Mögliche Optionen: -i (installieren), -u (deinstallieren), -e (einschalten), -d (ausschalten), -r (installieren und einschalten), keine Option (Blacklist erneueren und einschalten)"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
@@ -94,21 +98,36 @@ function abort() {
 	exit 42
 }
 
+function askYesNo() { # messageid message_parameters
+	local response
+	local yesno=$(get_message "$MSG_YES_NO")
+	ask_from_console "$1" ${@:2} ${yesno}
+	yesno=${yesno,,}
+	local yes="${yesno:0:1}"
+	read -sn 1 response
+	response=${response,,}
+	echo
+	
+	if [[ ${response} == ${yes} ]]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
 function uninstall() {
 	if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
 		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
 		help
 		exit 1
 	fi
-	
-	yesno=$(get_message "${MSG_YES_NO}")
-	write_to_console "${MSG_CONFIRM_UNINSTALL}" "$yesno"
-	read -sn 1 response
-	response=${response,,}
-	yesno=${yesno,,}
-	if [[ ${response} != ${yesno:0:1} ]]; then
-		exit 0
+
+	set +e				# TBD: hack 
+	askYesNo ${MSG_CONFIRM_UNINSTALL}
+	if (( ! $? )); then
+		exit 1
 	fi
+	set -e
 	
 	write_to_console "${MSG_PROCESSING_UNINSTALL}" "${EXECUTABLE_NAME}"
 	cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
@@ -118,12 +137,22 @@ function uninstall() {
 }
 
 function install() {
+		
 	if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-		write_to_console "${MSG_ALREADY_INSTALLED}" "${EXECUTABLE_NAME}"
-		help
-		exit 1
+		set +e			# TBD: hack 
+		askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"
+		if (( ! $? )); then
+			exit 0
+		fi
+		set -e
 	fi
 	
+	doInstall
+	
+}
+
+function doInstall() {
+		
 	write_to_console "${MSG_PROCESSING_INSTALL}" "${EXECUTABLE_NAME}"
 	mkdir ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/00-hosts
 	wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${GIT_INSTALL_URL}" || \
@@ -133,38 +162,55 @@ function install() {
 }
 
 function disable() {
+	
 	# Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
 	if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
-		write_to_console "${MSG_README_HINT}"
-		abort
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
 	fi
 
 	cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
-	write_to_console "${MSG_DISABLED_SUCCESS}"
+	write_to_console "${MSG_DISABLED_SUCCESS}" "${EXECUTABLE_NAME}"
 }
 
 function enable() { 
-	write_to_console "${MSG_NOT_IMPLEMENTED}" "${FUNCNAME}"	# TBD
+	
+	if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi
+	
+	if [[ $(ls -1 ${ETC_HOSTS_D_DIR}/[01234]0-* | wc -l) != "5" ]]; then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi
+	
+	# Insert comment
+	# Concatenate files
+	# Remove leading and trailing spaces
+	# Eliminate duplicates
+	printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there" > ${ETC_HOSTS}
+	cat ${ETC_HOSTS_D_DIR}/* | sed -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${ETC_HOSTS}
+	write_to_console "${MSG_ENABLED_SUCCESS}"
+
 }
 
 function help() { 
 	write_to_console "${MSG_HELP}"							# TBD
 }
 
-function execute () {
-	
-	if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
-		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-		help
-		exit 1
-	fi 
-	
+function download () {
+		
 	# Download der hosts Dateien
 	# Entfernen von carriage returns
 	# Entfernen von localhost und broadcast Adressen
 	# Entfernen von allen Kommentaren
 	# Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
 	# Entfernen von Leerzeilen
+	
 	write_to_console "${MSG_PROCESSING_URL}" "http://winhelp2002.mvps.org"
 	wget -qO - "http://winhelp2002.mvps.org/hosts.txt"| \
 	    sed -e 's/\r//' -e '/^0/!d' -e 's/#.*$//'> "${ETC_HOSTS_D_DIR}/10-mvpblocklist" || \
@@ -185,20 +231,25 @@ function execute () {
 	    sed -e '/^0/!d' > "${ETC_HOSTS_D_DIR}/40-yoyo.orgblocklist" || \
 	    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"; abort )
 	
-	# Insert comment
-	# Concatenate files
-	# Remove leading and trailing spaces
-	# Eliminate duplicates
-	printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there" > ${ETC_HOSTS}
-	cat ${ETC_HOSTS_D_DIR}/* | sed -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${ETC_HOSTS}
+}
+
+function execute () {
 	
-	write_to_console "${MSG_FINISHED_GENERATING}" "${ETC_HOSTS}"
+	if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		help
+		exit 1
+	fi 
+	
+	download	
+	enable
+
 }
 
 function get_message() { #messagenumber
     local msgv msg msgn
     msgn=$1
-    [ -z ${msgn} ] && msgn=${MSG_UNDEFINED}
+    [ -z "${msgn}" ] && msgn=${MSG_UNDEFINED}
     msgv="$MSGVAR[$msgn]"
     msg=${!msgv}
     if [ -z "${msg}" ]; then
@@ -215,6 +266,15 @@ function write_to_console() { #messagenumber parm1 ... parmn
 	printf "${msg}\n" "${@:2}"
 }
 
+function ask_from_console() { #messagenumber parm1 ... parmn
+    local msgv msg msgn
+    msgn=$1
+	msg=$(get_message "$msgn")
+	[ -z "${msg}" ] && msg=$(get_message "$MSG_UNDEFINED")
+	printf "${msg}" "${@:2}"
+}
+
+
 if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
     exit 1
@@ -224,6 +284,7 @@ if [ $# -gt 0 ]; then
 	case "$1" in
 	
 		--disable|-d) disable ;;
+		--enable|-e) enable ;;
 		--install|-i) install ;;
 		--run|-r) install && execute ;;
 		--uninstall|-u) uninstall ;;
