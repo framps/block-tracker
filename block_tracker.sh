@@ -266,7 +266,7 @@ function ask_from_console() { #messagenumber parm1 ... parmn
     printf "${msg}" "${@:2}"
 }
 
-if [[ $UID -ne 0 && $# -gt 0 && "$1" != "-h" && "$1" != "--help" ]]; then	# allow help without sudo
+if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
     exit 1
 fi
