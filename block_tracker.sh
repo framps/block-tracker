@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu -o pipefail										# see https://sipb.mit.edu/doc/safe-shell/
+set -e -o pipefail										# see https://sipb.mit.edu/doc/safe-shell/
 
 # various constants
 
