@@ -67,7 +67,7 @@ MSG_EN[$MSG_ALREADY_INSTALLED]="%b is already installed"
 MSG_DE[$MSG_ALREADY_INSTALLED]="%b ist schon installiert"
 MSG_REINSTALL=$((MSG_CNT++))
 MSG_EN[$MSG_REINSTALL]="%b upgraden? [%b] "
-MSG_DE[$MSG_REINSTALL]="%Neuer Version von %b installieren? [%b] "
+MSG_DE[$MSG_REINSTALL]="Neue Version von %b installieren? [%b] "
 
 # common messages
 
