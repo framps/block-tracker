@@ -7,7 +7,7 @@ This script blocks advertisements by extending the /etc/hosts to block specific 
 
 Execute following command to install block-tracker.
 ```
-wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && sudo rm block-tracker-setup.sh
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
 
 Now invoke
@@ -26,7 +26,7 @@ Leading numbers (00, 01, ..) define the sequence the files will be concatenated.
 
 To uninstall `block-tracker` just invoke
 ```
-block-tracker --uninstall
+sudo block-tracker --uninstall
 ```
 During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
 
@@ -46,7 +46,7 @@ Dieses Script blockt vermittels hosts Dateien u.a. Werbung.
 
 Zum Installieren, einfach folgenden Befehl ausführen:
 ```
-wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && sudo rm block-tracker-setup.sh
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
 
 Danach kann das Skript mittels
@@ -67,7 +67,7 @@ die Dateien zusammengesetzt werden.
 
 Möchte man das Skript wieder deinstallieren, genügt dieser Befehl:
 ```
-block-tracker --uninstall
+sudo block-tracker --uninstall
 ```
 Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert und das Verzeichnis `/etc/hosts.d/` sowie die Datei `/usr/local/bin/block-tracker` gelöscht.
 
