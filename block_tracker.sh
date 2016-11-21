@@ -267,6 +267,11 @@ function ask_from_console() { #messagenumber parm1 ... parmn
     printf "${msg}" "${@:2}"
 }
 
+if [[ " $@ " =~ " -h " || " $@ " =~ " --help " ]]; then # if any parameter asks for help
+	help
+	exit 0
+fi
+
 if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
     exit 1
@@ -279,8 +284,6 @@ if [ $# -gt 0 ]; then
         --install|-i) install ;;
         --run|-r) install && execute ;;
         --uninstall|-u) uninstall ;;
-        --help|-h) help	;;
-
         *)
         write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
         help
