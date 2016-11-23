@@ -277,19 +277,25 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
+cmd="execute"
+use_filter=false
 if [ $# -gt 0 ]; then
-    case "$1" in
-        --disable|-d) disable ;;
-        --enable|-e) enable ;;
-        --install|-i) install ;;
-        --run|-r) install && execute ;;
-        --uninstall|-u) uninstall ;;
-        *)
-        write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
-        help
-        exit 1
-        ;;
-    esac
-else
-    execute
+    while true; do
+        case "$1" in
+            --disable|-d) cmd="disable" ; shift ;;
+            --enable|-e) cmd="enable" ; shift ;;
+            --install|-i) cmd="install" ; shift ;;
+            --run|-r) cmd="install && execute" ; shift ;;
+            --uninstall|-u) cmd="uninstall" ; shift ;;
+            --filter|-f) use_filter=true ; shift ;;
+            "") break ;;
+            *)
+            write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
+            help
+            exit 1
+            ;;
+        esac
+    done
 fi
+
+eval "${cmd}"
