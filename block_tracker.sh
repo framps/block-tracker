@@ -1,12 +1,12 @@
 #!/bin/bash
 
-set -e -o pipefail										# see https://sipb.mit.edu/doc/safe-shell/
+set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
 
 # various constants
 
 INSTALL_PATH="/usr/local/bin"
 INSTALL_NAME="block_tracker"
-EXECUTABLE_NAME=${INSTALL_NAME/_/-}						# executable has hypen instead of underscore !!!
+EXECUTABLE_NAME=${INSTALL_NAME/_/-}                     # executable has hypen instead of underscore !!!
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_BRANCH="testing"
@@ -130,7 +130,7 @@ function uninstall() {
         exit 1
     fi
 
-    set +e				# TBD: hack
+    set +e              # TBD: hack
     askYesNo ${MSG_CONFIRM_UNINSTALL}
     if (( ! $? )); then
         exit 1
@@ -146,7 +146,7 @@ function uninstall() {
 
 function install() {
     if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-        set +e			# TBD: hack
+        set +e          # TBD: hack
         askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"
         if (( ! $? )); then
             exit 0
@@ -200,27 +200,27 @@ function enable() {
     cat ${ETC_HOSTS_D_DIR}/* | sed -e '/^#.*$/d' -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${ETC_HOSTS}
     if [ ${use_filter} == true ] && [ -f ${FILTER_CONFIG_FILE} ]; then
         local tmpfile=$(mktemp)
-		set +e 
+        set +e 
         cut -d " " -f 2 "${ETC_HOSTS}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${ETC_HOSTS} > "${tmpfile}"
         local rc=$?
         if (( $rc )); then
-			write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
-		else
-			local etcLines finalLines
-			etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
-			finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
-			write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
-			cp "${tmpfile}" "${ETC_HOSTS}"
-		fi
+            write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+        else
+            local etcLines finalLines
+            etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
+            finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
+            write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
+            cp "${tmpfile}" "${ETC_HOSTS}"
+        fi
         set -e 
-		rm "${tmpfile}"
+        rm "${tmpfile}"
     fi
     write_to_console "${MSG_ENABLED_SUCCESS}"
 
 }
 
 function help() {
-    write_to_console "${MSG_HELP}"							# TBD
+    write_to_console "${MSG_HELP}"                          # TBD
 }
 
 function download () {
@@ -293,8 +293,8 @@ function ask_from_console() { #messagenumber parm1 ... parmn
 }
 
 if [[ " $@ " =~ " -h " || " $@ " =~ " --help " ]]; then # if any parameter asks for help
-	help
-	exit 0
+    help
+    exit 0
 fi
 
 if [ $UID -ne 0 ]; then
@@ -315,10 +315,10 @@ if [ $# -gt 0 ]; then
             --filter|-f) use_filter=true ; shift ;;
    
             *)
-				write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
-				help
-				exit 1
-				;;
+                write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
+                help
+                exit 1
+                ;;
         esac
     done
 fi
