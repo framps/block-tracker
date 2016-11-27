@@ -109,7 +109,7 @@ ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} [-r] [-f]
 ${EXECUTABLE_NAME} -u
 
   -i, --install       Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
@@ -129,7 +129,7 @@ ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} [-r] [-f]
 ${EXECUTABLE_NAME} -u
 
   -i, --install       Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
@@ -397,7 +397,7 @@ if [ $# -gt 0 ]; then
             --disable|-d) cmd="disable" ; shift ;;
             --enable|-e) cmd="enable" ; shift ;;
             --install|-i) cmd="install" ; shift ;;
-            --run|-r) cmd="install && execute" ; shift ;;
+            --run|-r) cmd="execute" ; shift ;;
             --uninstall|-u) cmd="uninstall" ; shift ;;
             --filter|-f) use_filter=true ; shift ;;
             --filter-test|-F) cmd="filtertest" ; shift ;;
