@@ -103,8 +103,46 @@ MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
 MSG_HELP=$((MSG_CNT++))
-MSG_EN[$MSG_HELP]="${INSTALL_NAME} V${VERSION}\nPossible options: -i (install), -u (uninstall), -e (enable), -d (disable), -r (install and enable), -f (refresh blacklist, filter and enable), -ft (filter test), no option (refresh blacklist and enable)"
-MSG_DE[$MSG_HELP]="${INSTALL_NAME} V${VERSION}\nMögliche Optionen: -i (installieren), -u (deinstallieren), -e (einschalten), -d (ausschalten), -r (installieren und einschalten), -f (Blacklist erneueren, filtern und einschalten), -ft (Filtertest), keine Option (Blacklist erneueren und einschalten)"
+MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+Usage:
+${EXECUTABLE_NAME} -d
+${EXECUTABLE_NAME} -e [-f]
+${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -i
+${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -u
+
+  -i, --install       Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -u, --uninstall     Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
+                      and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -e, --enable        Enable ${EXECUTABLE_NAME} without downloading blacklists
+  -d, --disable       Disable all blacklists
+  -r, --run           Download and enable blacklists
+  -f, --filter        Enable the filter configured in ${FILTER_CONFIG_FILE}
+                      This option is only valid in combination with -e or -r
+  -F, --filter-test   Test the configuration of the filter
+
+The complete documentation is avialable under ${GIT_REPO_URL}."
+MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+Aufruf:
+${EXECUTABLE_NAME} -d
+${EXECUTABLE_NAME} -e [-f]
+${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -i
+${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -u
+
+  -i, --install       Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -u, --uninstall     Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
+                      und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -e, --enable        Aktiviere ${EXECUTABLE_NAME} ohne blacklists runterzuladen
+  -d, --disable       Deaktiviere alle blacklists
+  -r, --run           Lade und aktiviere blacklists
+  -f, --filter        Aktiviere den in ${FILTER_CONFIG_FILE} konfigurierten Filter
+                      Diese Option ist nur gültig in Kombination mit -e or -r
+  -F, --filter-test   Teste die Konfiguration des Filters
+
+Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
