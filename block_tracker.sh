@@ -280,8 +280,11 @@ function filtertest() {
         process_etc "${test_etc}"
 
         local tmpfile=$(mktemp)
+        # Remove comments and blank lins
+        local filter_regex=$(mktemp)
+        sed -e '/^#.*$/d' -e '/^\s*$/d' ${FILTER_CONFIG_FILE} > ${filter_regex}
         set +e
-        cut -d " " -f 2 "${test_etc}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${test_etc} > "${tmpfile}"
+        cut -d " " -f 2 "${test_etc}" | grep -xEf ${filter_regex} | grep -vf - ${test_etc} > "${tmpfile}"
         set -e
         local rc=$?
         if [[ $rc != 0 ]]; then
@@ -295,6 +298,7 @@ function filtertest() {
         fi
         rm "${tmpfile}"
         rm "${test_etc}"
+        rm "${filter_regex}"
     else
         write_to_console "${MSG_FILTER_NOT_FOUND}" "${FILTER_CONFIG_FILE}"
         exit 1
