@@ -211,12 +211,12 @@ function process_etc() { # resultfile
 }
 
 function enable() {
-    
+
     process_etc "${ETC_HOSTS}"
-    
+
     if [ ${use_filter} == true ] && [ -f ${FILTER_CONFIG_FILE} ]; then
         local tmpfile=$(mktemp)
-        set +e 
+        set +e
         cut -d " " -f 2 "${ETC_HOSTS}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${ETC_HOSTS} > "${tmpfile}"
         local rc=$?
         if (( $rc )); then
@@ -228,7 +228,7 @@ function enable() {
             write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
             cp "${tmpfile}" "${ETC_HOSTS}"
         fi
-        set -e 
+        set -e
         rm "${tmpfile}"
     fi
     write_to_console "${MSG_ENABLED_SUCCESS}"
@@ -236,15 +236,15 @@ function enable() {
 }
 
 function filtertest() {
-    
+
     if [ -f ${FILTER_CONFIG_FILE} ]; then
         local test_etc=$(mktemp)
         process_etc "${test_etc}"
 
         local tmpfile=$(mktemp)
-        set +e 
+        set +e
         cut -d " " -f 2 "${test_etc}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${test_etc} > "${tmpfile}"
-        set -e 
+        set -e
         local rc=$?
         if [[ $rc != 0 ]]; then
             write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
@@ -358,8 +358,8 @@ if [ $# -gt 0 ]; then
             --run|-r) cmd="install && execute" ; shift ;;
             --uninstall|-u) cmd="uninstall" ; shift ;;
             --filter|-f) use_filter=true ; shift ;;
-            --filtertest|-ft) cmd="filtertest" ; shift ;;
-   
+            --filter-test|-F) cmd="filtertest" ; shift ;;
+
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
                 help
