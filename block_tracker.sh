@@ -343,7 +343,7 @@ function filtertest() {
 }
 
 function get_latest_version() {
-    if which jqs > /dev/null 2>&1; then
+    if which jq > /dev/null 2>&1; then
         if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
             local latest_version=$(curl -s https://api.github.com/repos/ajacobsen/block-tracker/releases/latest |jq -r ".tag_name")
             write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
