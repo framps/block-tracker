@@ -115,7 +115,7 @@ ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} [-r] [-f]
+${EXECUTABLE_NAME} -r [-f]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 
@@ -137,7 +137,7 @@ ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} [-r] [-f]
+${EXECUTABLE_NAME} -r [-f]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 
@@ -411,7 +411,6 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
-cmd="execute"
 use_filter=false
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
@@ -431,6 +430,11 @@ if [ $# -gt 0 ]; then
                 ;;
         esac
     done
+fi
+
+if [ -z $cmd ]; then
+    help
+    exit 1
 fi
 
 $cmd
