@@ -1,20 +1,28 @@
 #!/bin/bash
 
-set -e -o pipefail										# see https://sipb.mit.edu/doc/safe-shell/
+set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
+
+VERSION="v0.0.2"
+RELEASED=true
 
 # various constants
 
 INSTALL_PATH="/usr/local/bin"
 INSTALL_NAME="block_tracker"
-EXECUTABLE_NAME=${INSTALL_NAME/_/-}						# executable has hypen instead of underscore !!!
+EXECUTABLE_NAME=${INSTALL_NAME/_/-}                     # executable has hypen instead of underscore !!!
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
+GITHUB_BRANCH="master"
 GITHUB_REPO="ajacobsen/block-tracker"
-#GITHUB_REPO="framps/block-tracker"
 GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
-GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/master/${INSTALL_NAME}.sh"
+if [ ${RELEASED} == true ]; then
+    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${VERSION}/${INSTALL_NAME}.sh"
+else
+    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
+fi
 ETC_HOSTS_D_DIR="/etc/hosts.d"
 ETC_HOSTS="/etc/hosts"
+FILTER_CONFIG_FILE="/etc/block-tracker.filter"
 
 # runtime messages
 
@@ -37,6 +45,30 @@ MSG_DE[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun eingeschaltet"
 MSG_PROCESSING_URL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
 MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
+MSG_APPLIED_FILTER=$((MSG_CNT++))
+MSG_EN[$MSG_APPLIED_FILTER]="Filter %b removes %b lines"
+MSG_DE[$MSG_APPLIED_FILTER]="Filter %b entfernt %b Zeilen"
+MSG_FILTER_FAILURE=$((MSG_CNT++))
+MSG_EN[$MSG_FILTER_FAILURE]="Error applying filter %b. rc: %b"
+MSG_DE[$MSG_FILTER_FAILURE]="Fehler beim Anwenden des Filters aus %b. rc: %b"
+MSG_FILTER_RESULT=$((MSG_CNT++))
+MSG_EN[$MSG_FILTER_RESULT]="Filter %b will remove %b lines\n--- List of filtered lines ---"
+MSG_DE[$MSG_FILTER_RESULT]="Filter %b würde %b Zeilen entfernen\n--- Liste der gefilterten Zeilen ---"
+MSG_FILTER_NOT_FOUND=$((MSG_CNT++))
+MSG_EN[$MSG_FILTER_NOT_FOUND]="Filter %b not found"
+MSG_DE[$MSG_FILTER_NOT_FOUND]="Filter %b nicht gefunden"
+MSG_STATUS_ENABLED=$((MSG_CNT++))
+MSG_EN[$MSG_STATUS_ENABLED]="${EXECUTABLE_NAME} is enabled"
+MSG_DE[$MSG_STATUS_ENABLED]="${EXECUTABLE_NAME} ist aktiviert"
+MSG_STATUS_DISABLED=$((MSG_CNT++))
+MSG_EN[$MSG_STATUS_DISABLED]="${EXECUTABLE_NAME} is disabled"
+MSG_DE[$MSG_STATUS_DISABLED]="${EXECUTABLE_NAME} is deaktiviert"
+MSG_CURRENT_VERSION=$((MSG_CNT++))
+MSG_EN[$MSG_CURRENT_VERSION]="%b version installed: %b"
+MSG_DE[$MSG_CURRENT_VERSION]="Installierte Version von %b: %b"
+MSG_LATEST_VERSION=$((MSG_CNT++))
+MSG_EN[$MSG_LATEST_VERSION]="%b latest stable version: %b"
+MSG_DE[$MSG_LATEST_VERSION]="Neueste stabile Version von %b: %b"
 
 # Messages for installer
 
@@ -66,8 +98,11 @@ MSG_ALREADY_INSTALLED=$((MSG_CNT++))
 MSG_EN[$MSG_ALREADY_INSTALLED]="%b is already installed"
 MSG_DE[$MSG_ALREADY_INSTALLED]="%b ist schon installiert"
 MSG_REINSTALL=$((MSG_CNT++))
-MSG_EN[$MSG_REINSTALL]="%b upgraden? [%b] "
-MSG_DE[$MSG_REINSTALL]="Neue Version von %b installieren? [%b] "
+MSG_EN[$MSG_REINSTALL]="reinstall %b? [%b] "
+MSG_DE[$MSG_REINSTALL]="%b erneut installieren? [%b] "
+MSG_UPGRADE="$((MSG_CNT++))"
+MSG_EN[$MSG_UPGRADE]="Upgrade %b to version %b? [%b]"
+MSG_DE[$MSG_UPGRADE]="%b auf Version %b aktualisieren? [%b]"
 
 # common messages
 
@@ -88,8 +123,57 @@ MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
 MSG_HELP=$((MSG_CNT++))
-MSG_EN[$MSG_HELP]="Possible options: -i (install), -u (uninstall), -e (enable), -d (disable), -r (install and enable), no option (refresh blacklist and enable)"
-MSG_DE[$MSG_HELP]="Mögliche Optionen: -i (installieren), -u (deinstallieren), -e (einschalten), -d (ausschalten), -r (installieren und einschalten), keine Option (Blacklist erneueren und einschalten)"
+MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+Usage:
+${EXECUTABLE_NAME} -d
+${EXECUTABLE_NAME} -e [-f]
+${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -i
+${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -s
+${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -U
+
+  -d, --disable       Disable all blacklists
+  -e, --enable        Enable ${EXECUTABLE_NAME} without downloading blacklists
+  -f, --filter        Enable the filter configured in ${FILTER_CONFIG_FILE}
+                      This option is only valid in combination with -e or -r
+  -F, --filter-test   Test the configuration of the filter
+  -i, --install       Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -r, --run           Download and enable blacklists
+  -s, --status        Show the current status of block-tracker (enabled/disabled)
+  -u, --uninstall     Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
+                      and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -U, --update        Upgrade to latest stable release
+
+The complete documentation is avialable under ${GIT_REPO_URL}."
+MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+Aufruf:
+${EXECUTABLE_NAME} -d
+${EXECUTABLE_NAME} -e [-f]
+${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -i
+${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -s
+${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -U
+
+  -d, --disable       Deaktiviere alle blacklists
+  -e, --enable        Aktiviere ${EXECUTABLE_NAME} ohne blacklists runterzuladen
+  -f, --filter        Aktiviere den in ${FILTER_CONFIG_FILE} konfigurierten Filter
+                      Diese Option ist nur gültig in Kombination mit -e or -r
+  -F, --filter-test   Teste die Konfiguration des Filters
+  -i, --install       Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -r, --run           Lade und aktiviere blacklists
+  -s, --status        Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
+  -u, --uninstall     Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
+                      und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -U, --update        Aktualisiere auf neueste stabile Version
+
+Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
+MSG_MISSING_DEP=$((MSG_CNT++))
+MSG_EN[$MSG_MISSING_DEP]="You need %b to use this feature"
+MSG_DE[$MSG_MISSING_DEP]="Für diese Funktion wird %b benötigt"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
@@ -122,7 +206,7 @@ function uninstall() {
         exit 1
     fi
 
-    set +e				# TBD: hack
+    set +e              # TBD: hack
     askYesNo ${MSG_CONFIRM_UNINSTALL}
     if (( ! $? )); then
         exit 1
@@ -138,7 +222,7 @@ function uninstall() {
 
 function install() {
     if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-        set +e			# TBD: hack
+        set +e          # TBD: hack
         askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"
         if (( ! $? )); then
             exit 0
@@ -146,14 +230,15 @@ function install() {
         set -e
     fi
 
-    doInstall
+    doInstall "${GIT_INSTALL_URL}"
 }
 
-function doInstall() {
+function doInstall() { # install_url
+    local url="${1}"
     write_to_console "${MSG_PROCESSING_INSTALL}" "${EXECUTABLE_NAME}"
     mkdir ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/00-hosts
-    wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${GIT_INSTALL_URL}" || \
-        ( write_to_console "${MSG_DOWNLOAD_FAILED}" "$GIT_INSTALL_URL}"; abort )
+    wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${url}" || \
+        ( write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"; abort )
     chmod +x "${INSTALL_PATH}/${EXECUTABLE_NAME}"
     write_to_console "${MSG_INSTALL_SUCCESS}" "${EXECUTABLE_NAME}" "${INSTALL_PATH}"
 }
@@ -170,7 +255,8 @@ function disable() {
     write_to_console "${MSG_DISABLED_SUCCESS}" "${EXECUTABLE_NAME}"
 }
 
-function enable() {
+function process_etc() { # resultfile
+
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         help
@@ -183,19 +269,105 @@ function enable() {
         exit 1
     fi
 
+    local result_file="$1"
+
     # Insert comment
     # Concatenate files
     # Remove comments
     # Remove leading and trailing spaces
     # Eliminate duplicates
-    printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there\n" > ${ETC_HOSTS}
-    cat ${ETC_HOSTS_D_DIR}/* | sed -e '/^#.*$/d' -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${ETC_HOSTS}
+    printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there\n" > ${result_file}
+    cat ${ETC_HOSTS_D_DIR}/* | sed -e '/^#.*$/d' -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${result_file}
+}
+
+function enable() {
+
+    process_etc "${ETC_HOSTS}"
+
+    if [ ${use_filter} == true ]; then
+        if [ -f ${FILTER_CONFIG_FILE} ]; then
+            local tmpfile=$(mktemp)
+            set +e
+            cut -d " " -f 2 "${ETC_HOSTS}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${ETC_HOSTS} > "${tmpfile}"
+            local rc=$?
+            if (( $rc )); then
+                write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+            else
+                local etcLines finalLines
+                etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
+                finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
+                write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
+                cp "${tmpfile}" "${ETC_HOSTS}"
+            fi
+            set -e
+            rm "${tmpfile}"
+        else
+            write_to_console "${MSG_FILTER_NOT_FOUND}" "${FILTER_CONFIG_FILE}"
+        fi
+    fi
     write_to_console "${MSG_ENABLED_SUCCESS}"
 
 }
 
+function filtertest() {
+
+    if [ -f ${FILTER_CONFIG_FILE} ]; then
+        local test_etc=$(mktemp)
+        process_etc "${test_etc}"
+
+        local tmpfile=$(mktemp)
+        # Remove comments and blank lins
+        local filter_regex=$(mktemp)
+        sed -e '/^#.*$/d' -e '/^\s*$/d' ${FILTER_CONFIG_FILE} > ${filter_regex}
+        set +e
+        cut -d " " -f 2 "${test_etc}" | grep -xEf ${filter_regex} | grep -vf - ${test_etc} > "${tmpfile}"
+        set -e
+        local rc=$?
+        if [[ $rc != 0 ]]; then
+            write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+        else
+            local etcLines finalLines
+            etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
+            finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
+            write_to_console "${MSG_FILTER_RESULT}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
+            cut -d " " -f 2 "${test_etc}" | grep -xEf ${FILTER_CONFIG_FILE}
+        fi
+        rm "${tmpfile}"
+        rm "${test_etc}"
+        rm "${filter_regex}"
+    else
+        write_to_console "${MSG_FILTER_NOT_FOUND}" "${FILTER_CONFIG_FILE}"
+        exit 1
+    fi
+
+}
+
+function get_latest_version() {
+    if which jqs > /dev/null 2>&1; then
+        if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+            local latest_version=$(curl -s https://api.github.com/repos/ajacobsen/block-tracker/releases/latest |jq -r ".tag_name")
+            write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
+            write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
+            local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
+            set +e          # TBD: hack
+            askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"
+            if (( ! $? )); then
+                exit 0
+            fi
+            set -e
+        else
+            write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+            exit 0
+        fi
+
+        doInstall "${url}"
+    else
+        write_to_console "${MSG_MISSING_DEP}" "jq"
+    fi
+}
+
 function help() {
-    write_to_console "${MSG_HELP}"							# TBD
+    write_to_console "${MSG_HELP}"                          # TBD
 }
 
 function download () {
@@ -267,9 +439,17 @@ function ask_from_console() { #messagenumber parm1 ... parmn
     printf "${msg}" "${@:2}"
 }
 
+function status() {
+    if [ "$(head -n 1 ${ETC_HOSTS})" == "# DO NOT EDIT THIS FILE" ]; then
+        write_to_console ${MSG_STATUS_ENABLED}
+    else
+        write_to_console ${MSG_STATUS_DISABLED}
+    fi
+}
+
 if [[ " $@ " =~ " -h " || " $@ " =~ " --help " ]]; then # if any parameter asks for help
-	help
-	exit 0
+    help
+    exit 0
 fi
 
 if [ $UID -ne 0 ]; then
@@ -277,25 +457,31 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
-cmd="execute"
 use_filter=false
 if [ $# -gt 0 ]; then
-    while true; do
+    while [[ -n "$1" ]]; do
         case "$1" in
             --disable|-d) cmd="disable" ; shift ;;
             --enable|-e) cmd="enable" ; shift ;;
             --install|-i) cmd="install" ; shift ;;
-            --run|-r) cmd="install && execute" ; shift ;;
+            --run|-r) cmd="execute" ; shift ;;
             --uninstall|-u) cmd="uninstall" ; shift ;;
             --filter|-f) use_filter=true ; shift ;;
-            "") break ;;
+            --filter-test|-F) cmd="filtertest" ; shift ;;
+            --status|-s) cmd="status" ; shift ;;
+            --update|-U) cmd="get_latest_version" ; shift ;;
             *)
-            write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
-            help
-            exit 1
-            ;;
+                write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
+                help
+                exit 1
+                ;;
         esac
     done
 fi
 
-eval "${cmd}"
+if [ -z $cmd ]; then
+    help
+    exit 1
+fi
+
+$cmd
