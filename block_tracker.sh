@@ -262,22 +262,26 @@ function enable() {
 
     process_etc "${ETC_HOSTS}"
 
-    if [ ${use_filter} == true ] && [ -f ${FILTER_CONFIG_FILE} ]; then
-        local tmpfile=$(mktemp)
-        set +e
-        cut -d " " -f 2 "${ETC_HOSTS}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${ETC_HOSTS} > "${tmpfile}"
-        local rc=$?
-        if (( $rc )); then
-            write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+    if [ ${use_filter} == true ]; then
+        if [ -f ${FILTER_CONFIG_FILE} ]; then
+            local tmpfile=$(mktemp)
+            set +e
+            cut -d " " -f 2 "${ETC_HOSTS}" | grep -xEf ${FILTER_CONFIG_FILE} | grep -vf - ${ETC_HOSTS} > "${tmpfile}"
+            local rc=$?
+            if (( $rc )); then
+                write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+            else
+                local etcLines finalLines
+                etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
+                finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
+                write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
+                cp "${tmpfile}" "${ETC_HOSTS}"
+            fi
+            set -e
+            rm "${tmpfile}"
         else
-            local etcLines finalLines
-            etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
-            finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
-            write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
-            cp "${tmpfile}" "${ETC_HOSTS}"
+            write_to_console "${MSG_FILTER_NOT_FOUND}" "${FILTER_CONFIG_FILE}"
         fi
-        set -e
-        rm "${tmpfile}"
     fi
     write_to_console "${MSG_ENABLED_SUCCESS}"
 
