@@ -24,14 +24,36 @@ sudo block-tracker --uninstall
 ```
 During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
 
-After installation you have to invoke ```sudo block-tracker --run```  at least once. This will download the lists with bad domains (blocklists), save them to `/etc/hosts.d/` and enable blocking of all those domains.
+After installation you have to invoke
+```
+sudo block-tracker --run
+```
+at least once. This will download the lists with bad domains (blocklists), save them to `/etc/hosts.d/` and enable blocking of all those domains.
 
-To temporarily disable `block-tracker`, invoke ```sudo block-tracker --disable```
-To re-enable `block-tracker`, invoke ```sudo block-tracker --enable``` or ```sudo block-tracker --run```
+To temporarily disable `block-tracker` invoke
+```
+sudo block-tracker --disable
+```
+To re-enable `block-tracker` invoke
+```
+sudo block-tracker --enable
+```
+or
+```
+sudo block-tracker --run
+```
 The difference is, that `--enable` does not download the blocklists.
 You should prefer `--enable` and use `--run` only if you want to get the latest version of the blocklists.
 
-To check if `block-tracker` is enabled/disabled invoke ```sudo block-tracker --status```
+To check if `block-tracker` is enabled/disabled invoke
+```
+sudo block-tracker --status
+```
+
+To update `block-tracker` to the latest stable release invoke
+```
+sudo block-tracker --update
+```
 
 `block-tracker --help` shows a brief description of all options
 
@@ -70,9 +92,16 @@ sudo block-tracker --uninstall
 ```
 Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert und das Verzeichnis `/etc/hosts.d/` sowie die Datei `/usr/local/bin/block-tracker` gelöscht.
 
-Nach der Installation muss ```sudo block-tracker --run``` ausgeführt werden, um die Blocklisten runterzuladen, in `/etc/hosts.d/` zu speichern
+Nach der Installation muss
+```
+sudo block-tracker --run
+```
+ausgeführt werden, um die Blocklisten runterzuladen, in `/etc/hosts.d/` zu speichern
 
-Um `block-tracker` vorübergehend zu deaktivieren, benutze ```sudo block-tracker --disable```
+Um `block-tracker` vorübergehend zu deaktivieren, benutze
+```
+sudo block-tracker --disable
+```
 Um `block-tracker` wieder zu aktivieren, benutze
 ```
 sudo block-tracker --enable
@@ -87,6 +116,10 @@ Man sollte `--enable` bevorzugen, so lange man nicht die Blocklisten aktualisier
 Um zu prüfen, ob `block-tracker` aktiviert/deaktiviert ist, benutze
 ```
 sudo block-tracker --status
+```
+Um `block-tracker` auf die neueste stabile Version zu aktualisieren benutze
+```
+sudo block-tracker --update
 ```
 
 `block-tracker --help` zeigt eine kurze Beschreibung aller Optionen.
