@@ -2,7 +2,8 @@
 
 set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
 
-VERSION="0.0.1"
+VERSION="v0.0.2"
+RELEASED=false
 
 # various constants
 
@@ -11,10 +12,14 @@ INSTALL_NAME="block_tracker"
 EXECUTABLE_NAME=${INSTALL_NAME/_/-}                     # executable has hypen instead of underscore !!!
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
-GITHUB_BRANCH="testing"
+GITHUB_BRANCH="master"
 GITHUB_REPO="ajacobsen/block-tracker"
 GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
-GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/$GITHUB_BRANCH/${INSTALL_NAME}.sh"
+if [ ${RELEASED} == true ]; then
+    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${VERSION}/${INSTALL_NAME}.sh"
+else
+    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
+fi
 ETC_HOSTS_D_DIR="/etc/hosts.d"
 ETC_HOSTS="/etc/hosts"
 FILTER_CONFIG_FILE="/etc/block-tracker.filter"
@@ -58,6 +63,12 @@ MSG_DE[$MSG_STATUS_ENABLED]="${EXECUTABLE_NAME} ist aktiviert"
 MSG_STATUS_DISABLED=$((MSG_CNT++))
 MSG_EN[$MSG_STATUS_DISABLED]="${EXECUTABLE_NAME} is disabled"
 MSG_DE[$MSG_STATUS_DISABLED]="${EXECUTABLE_NAME} is deaktiviert"
+MSG_CURRENT_VERSION=$((MSG_CNT++))
+MSG_EN[$MSG_CURRENT_VERSION]="%b version installed: %b"
+MSG_DE[$MSG_CURRENT_VERSION]="Installierte Version von %b: %b"
+MSG_LATEST_VERSION=$((MSG_CNT++))
+MSG_EN[$MSG_LATEST_VERSION]="%b latest stable version: %b"
+MSG_DE[$MSG_LATEST_VERSION]="Neueste stabile Version von %b: %b"
 
 # Messages for installer
 
@@ -87,8 +98,11 @@ MSG_ALREADY_INSTALLED=$((MSG_CNT++))
 MSG_EN[$MSG_ALREADY_INSTALLED]="%b is already installed"
 MSG_DE[$MSG_ALREADY_INSTALLED]="%b ist schon installiert"
 MSG_REINSTALL=$((MSG_CNT++))
-MSG_EN[$MSG_REINSTALL]="%b upgraden? [%b] "
-MSG_DE[$MSG_REINSTALL]="Neue Version von %b installieren? [%b] "
+MSG_EN[$MSG_REINSTALL]="reinstall %b? [%b] "
+MSG_DE[$MSG_REINSTALL]="%b erneut installieren? [%b] "
+MSG_UPGRADE="$((MSG_CNT++))"
+MSG_EN[$MSG_UPGRADE]="Upgrade %b to version %b? [%b]"
+MSG_DE[$MSG_UPGRADE]="%b auf Version %b aktualisieren? [%b]"
 
 # common messages
 
@@ -118,6 +132,7 @@ ${EXECUTABLE_NAME} -i
 ${EXECUTABLE_NAME} -r [-f]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -U
 
   -d, --disable       Disable all blacklists
   -e, --enable        Enable ${EXECUTABLE_NAME} without downloading blacklists
@@ -129,6 +144,7 @@ ${EXECUTABLE_NAME} -u
   -s, --status        Show the current status of block-tracker (enabled/disabled)
   -u, --uninstall     Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
                       and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -U, --update        Upgrade to latest stable release
 
 The complete documentation is avialable under ${GIT_REPO_URL}."
 MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
@@ -140,6 +156,7 @@ ${EXECUTABLE_NAME} -i
 ${EXECUTABLE_NAME} -r [-f]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -U
 
   -d, --disable       Deaktiviere alle blacklists
   -e, --enable        Aktiviere ${EXECUTABLE_NAME} ohne blacklists runterzuladen
@@ -151,8 +168,12 @@ ${EXECUTABLE_NAME} -u
   -s, --status        Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -u, --uninstall     Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
                       und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -U, --update        Aktualisiere auf neueste stabile Version
 
 Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
+MSG_MISSING_DEP=$((MSG_CNT++))
+MSG_EN[$MSG_MISSING_DEP]="You need %b to use this feature"
+MSG_DE[$MSG_MISSING_DEP]="Für diese Funktion wird %b benötigt"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
@@ -209,14 +230,15 @@ function install() {
         set -e
     fi
 
-    doInstall
+    doInstall "${GIT_INSTALL_URL}"
 }
 
-function doInstall() {
+function doInstall() { # install_url
+    local url="${1}"
     write_to_console "${MSG_PROCESSING_INSTALL}" "${EXECUTABLE_NAME}"
     mkdir ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/00-hosts
-    wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${GIT_INSTALL_URL}" || \
-        ( write_to_console "${MSG_DOWNLOAD_FAILED}" "$GIT_INSTALL_URL}"; abort )
+    wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${url}" || \
+        ( write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"; abort )
     chmod +x "${INSTALL_PATH}/${EXECUTABLE_NAME}"
     write_to_console "${MSG_INSTALL_SUCCESS}" "${EXECUTABLE_NAME}" "${INSTALL_PATH}"
 }
@@ -318,6 +340,30 @@ function filtertest() {
         exit 1
     fi
 
+}
+
+function get_latest_version() {
+    if which jqs > /dev/null 2>&1; then
+        if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+            local latest_version=$(curl -s https://api.github.com/repos/ajacobsen/block-tracker/releases/latest |jq -r ".tag_name")
+            write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
+            write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
+            local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
+            set +e          # TBD: hack
+            askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"
+            if (( ! $? )); then
+                exit 0
+            fi
+            set -e
+        else
+            write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+            exit 0
+        fi
+
+        doInstall "${url}"
+    else
+        write_to_console "${MSG_MISSING_DEP}" "jq"
+    fi
 }
 
 function help() {
@@ -422,7 +468,8 @@ if [ $# -gt 0 ]; then
             --uninstall|-u) cmd="uninstall" ; shift ;;
             --filter|-f) use_filter=true ; shift ;;
             --filter-test|-F) cmd="filtertest" ; shift ;;
-            --status|-s) cmd="status"; shift ;;
+            --status|-s) cmd="status" ; shift ;;
+            --update|-U) cmd="get_latest_version" ; shift ;;
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
                 help
