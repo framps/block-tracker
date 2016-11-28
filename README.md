@@ -7,7 +7,7 @@ This script blocks advertisements by extending the /etc/hosts to block specific 
 
 Execute following command to install block-tracker.
 ```
-wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.2/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
 This will create `/etc/hosts.d/` directory and
 copies `/etc/hosts` to `/etc/hosts.d/00-hosts`.
@@ -75,7 +75,7 @@ Dieses Script blockt mittels hosts Dateien u.a. Werbung.
 
 Zum Installieren, einfach folgenden Befehl ausführen:
 ```
-wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/master/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
+wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.2/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
 Das erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
 
