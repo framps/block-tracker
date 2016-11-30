@@ -102,6 +102,9 @@ MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
 MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
+MSG_OPTION_ERROR=$((MSG_CNT++))
+MSG_EN[$MSG_OPTION_ERROR]="Invalid options"
+MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionen"
 MSG_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
 Usage:
@@ -306,6 +309,12 @@ function filtertest() {
 
 }
 
+function invalid_option() {
+	write_to_console $MSG_OPTION_ERROR
+	write_to_console $MSG_HELP
+	exit 1
+}
+
 function help() {
     write_to_console "${MSG_HELP}"                          # TBD
 }
@@ -391,16 +400,56 @@ fi
 
 cmd="execute"
 use_filter=false
+basic_cmd_cnt=0
+filter_option_allowed=1
+
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
         case "$1" in
-            --disable|-d) cmd="disable" ; shift ;;
-            --enable|-e) cmd="enable" ; shift ;;
-            --install|-i) cmd="install" ; shift ;;
-            --run|-r) cmd="execute" ; shift ;;
-            --uninstall|-u) cmd="uninstall" ; shift ;;
-            --filter|-f) use_filter=true ; shift ;;
-            --filter-test|-F) cmd="filtertest" ; shift ;;
+
+			# basic commands
+        
+            --disable|-d)
+				cmd="disable";
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=0
+				shift ;;
+				
+            --enable|-e)
+				cmd="enable";
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=1
+				shift ;;
+				
+            --install|-i)
+				cmd="install";
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=0
+				shift ;;
+				
+            --run|-r)
+				cmd="execute";
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=1
+				shift ;;
+				
+            --uninstall|-u)
+				cmd="uninstall"; 
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=0
+				shift ;;
+								
+            --filter-test|-F) 
+				cmd="filtertest";
+				let basic_cmd_cnt=$basic_cmd_cnt+1
+				filter_option_allowed=0
+				shift ;;
+
+			# options
+
+            --filter|-f) 
+				use_filter=true; 
+				shift ;;
 
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
@@ -409,6 +458,14 @@ if [ $# -gt 0 ]; then
                 ;;
         esac
     done
+fi
+
+if (( basic_cmd_cnt > 1 )); then
+	invalid_option
+fi
+
+if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
+	invalid_option
 fi
 
 $cmd
