@@ -141,18 +141,19 @@ MSG_DE[$MSG_FILTER_INVALID]="Filter option not allowed with option %b"
 MSG_EN[$MSG_FILTER_INVALID]="Filter Option nicht erlaubt mit Option %b"
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
-MSG_CONFIG_NOT_FOUND=$((MSG_CNT++))
-MSG_EN[$MSG_CONFIG_NOT_FOUND]="Filter file '%b' not found"
-MSG_DE[$MSG_CONFIG_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
+MSG_CONFIG_FILE_NOT_FOUND=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIG_FILE_NOT_FOUND]="Filter file '%b' not found"
+MSG_DE[$MSG_CONFIG_FILE_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
 MSG_MISSING_CONFIG=$((MSG_CNT++))
-MSG_EN[$MSG_MISSING_CONFIG]="Missing filter file parameter"
-MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben"
+MSG_EN[$MSG_MISSING_CONFIG]="Missing filter file"
+MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben "
 MSG_OPTION_ERROR=$((MSG_CNT++))
-MSG_EN[$MSG_OPTION_ERROR]="Invalid options"
-MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionen"
+MSG_EN[$MSG_OPTION_ERROR]="Invalid combination of options"
+MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
 MSG_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
 Usage:
+${EXECUTABLE_NAME} -c FILE
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
@@ -162,11 +163,13 @@ ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 ${EXECUTABLE_NAME} -U
 
+  -c, --config file   Use special filter file. Deafult is $FILTER_CONFIG_FILE
   -d, --disable       Disable all blacklists
   -e, --enable        Enable ${EXECUTABLE_NAME} without downloading blacklists
   -f, --filter        Enable the filter configured in ${FILTER_CONFIG_FILE}
+                      A different filter file can be specified with -c or --config.
                       This option is only valid in combination with -e or -r
-  -F, --filter-test   Test the configuration of the filter
+  -F, --filter-test   Test the configuration of the filter and display lines filtered
   -i, --install       Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
   -r, --run           Download and enable blacklists
   -s, --status        Show the current status of block-tracker (enabled/disabled)
@@ -174,9 +177,10 @@ ${EXECUTABLE_NAME} -U
                       and disable ${EXECUTABLE_NAME} (See -d|--disable)
   -U, --update        Upgrade to latest stable release
 
-The complete documentation is avialable under ${GIT_REPO_URL}."
+The complete documentation is available on ${GIT_REPO_URL}."
 MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
 Aufruf:
+${EXECUTABLE_NAME} -c DATEI
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f]
 ${EXECUTABLE_NAME} -F
@@ -186,13 +190,17 @@ ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 ${EXECUTABLE_NAME} -U
 
+  -c, --config Datei  Benutze spezielle Filterdatei. Standard ist $FILTER_CONFIG_FILE.
   -d, --disable       Deaktiviere alle blacklists
   -e, --enable        Aktiviere ${EXECUTABLE_NAME} ohne blacklists runterzuladen
-  -f, --filter        Aktiviere den in ${FILTER_CONFIG_FILE} konfigurierten Filter
+  -f, --filter        Aktiviere den Filter. Standarddatei ist $FILTER_CONFIG_FILE.
+                      Alternativ kann mit -c oder --config eine andere Filterdatei
+                      angegeben werden.
                       Diese Option ist nur gültig in Kombination mit -e or -r
-  -F, --filter-test   Teste die Konfiguration des Filters
+  -F, --filter-test   Teste die Konfiguration des Filters und liste welche Zeilen gefiltert
   -i, --install       Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
   -r, --run           Lade und aktiviere blacklists
+                      werden
   -s, --status        Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -u, --uninstall     Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
                       und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
@@ -503,42 +511,42 @@ if [ $# -gt 0 ]; then
             # basic commands
             --disable|-d)
                 cmd="disable"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
             --enable|-e)
                 cmd="enable"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=1
                 shift ;;
             --filter-test|-F)
                 cmd="filtertest"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
             --install|-i)
                 cmd="install"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
             --run|-r)
                 cmd="execute"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=1
                 shift ;;
             --status|-s)
                 cmd="status"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
             --uninstall|-u)
                 cmd="uninstall"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
             --update|-U)
                 cmd="get_latest_version"
-                : $(( basic_cmd_cnt+=1 ))
+                : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
                 shift ;;
 
@@ -554,10 +562,10 @@ if [ $# -gt 0 ]; then
                 shift
                 if [[ -z "$1" || "${1:0:1}" == "-" ]]; then
                     write_to_console $MSG_MISSING_CONFIG
-                    invalid_option
+                    exit 1
                 fi
                 if [[ ! -f "$1" ]]; then
-                    write_to_console $MSG_CONFIG_NOT_FOUND "$1"
+                    write_to_console $MSG_CONFIG_FILE_NOT_FOUND "$1"
                     exit 1
                 fi
                 FILTER_CONFIG_FILE="$1"
