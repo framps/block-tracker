@@ -110,7 +110,7 @@ MSG_EN[$MSG_CONFIG_FILE_NOT_FOUND]="Filter file '%b' not found"
 MSG_DE[$MSG_CONFIG_FILE_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
 MSG_MISSING_CONFIG=$((MSG_CNT++))
 MSG_EN[$MSG_MISSING_CONFIG]="Missing filter file"
-MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben"
+MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben "
 MSG_OPTION_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_OPTION_ERROR]="Invalid combination of options"
 MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
@@ -135,7 +135,7 @@ ${EXECUTABLE_NAME} -c filterfilename
                       A different filter file can be specified with -c or --config.
                       This option is only valid in combination with -e or -r
   -F, --filter-test   Test the configuration of the filter and display lines filtered
-  -c, --config <file> Use special filter file. Deafult is $FILTER_CONFIG_FILE
+  -c, --config file   Use special filter file. Deafult is $FILTER_CONFIG_FILE
 
 The complete documentation is available on ${GIT_REPO_URL}."
 MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
@@ -160,7 +160,7 @@ ${EXECUTABLE_NAME} -c Filterdatei
                       Diese Option ist nur gültig in Kombination mit -e or -r
   -F, --filter-test   Teste die Konfiguration des Filters und liste welche Zeilen gefiltert 
                       werden
-  -c, --config <Datei>Benutze spezielle Filterdatei. Standard ist $FILTER_CONFIG_FILE.
+  -c, --config Datei  Benutze spezielle Filterdatei. Standard ist $FILTER_CONFIG_FILE.
 
 Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
 
@@ -476,8 +476,8 @@ if [ $# -gt 0 ]; then
 			--config|-c)
 				shift
 				if [[ -z "$1" || "${1:0:1}" == "-" ]]; then
-					write_to_console $MSG_MISSING_CONFIG
-					invalid_option
+					write_to_console $MSG_MISSING_CONFIG 
+					exit 1
 				fi
 				if [[ ! -f "$1" ]]; then
 					write_to_console $MSG_CONFIG_FILE_NOT_FOUND "$1"
