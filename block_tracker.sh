@@ -136,8 +136,20 @@ MSG_ABORTED=$((MSG_CNT++))
 MSG_EN[$MSG_ABORTED]="Program aborted"
 MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
 MSG_NOT_ROOT=$((MSG_CNT++))
+MSG_FILTER_INVALID=$((MSG_CNT++))
+MSG_DE[$MSG_FILTER_INVALID]="Filter option not allowed with option %b"
+MSG_EN[$MSG_FILTER_INVALID]="Filter Option nicht erlaubt mit Option %b"
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
+MSG_CONFIG_NOT_FOUND=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIG_NOT_FOUND]="Filter file '%b' not found"
+MSG_DE[$MSG_CONFIG_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
+MSG_MISSING_CONFIG=$((MSG_CNT++))
+MSG_EN[$MSG_MISSING_CONFIG]="Missing filter file parameter"
+MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben"
+MSG_OPTION_ERROR=$((MSG_CNT++))
+MSG_EN[$MSG_OPTION_ERROR]="Invalid options"
+MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionen"
 MSG_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
 Usage:
@@ -358,6 +370,12 @@ function filtertest() {
 
 }
 
+function invalid_option() {
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_HELP
+    exit 1
+}
+
 function get_latest_version() {
     if which jq > /dev/null 2>&1; then
         if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
@@ -473,31 +491,94 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
+cmd="execute"
 use_filter=false
+basic_cmd_cnt=0
+filter_option_allowed=1
+previous_token=""
+
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
         case "$1" in
-            --disable|-d) cmd="disable" ; shift ;;
-            --enable|-e) cmd="enable" ; shift ;;
-            --install|-i) cmd="install" ; shift ;;
-            --run|-r) cmd="execute" ; shift ;;
-            --uninstall|-u) cmd="uninstall" ; shift ;;
-            --filter|-f) use_filter=true ; shift ;;
-            --filter-test|-F) cmd="filtertest" ; shift ;;
-            --status|-s) cmd="status" ; shift ;;
-            --update|-U) cmd="get_latest_version" ; shift ;;
+            # basic commands
+            --disable|-d)
+                cmd="disable"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+            --enable|-e)
+                cmd="enable"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=1
+                shift ;;
+            --filter-test|-F)
+                cmd="filtertest"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+            --install|-i)
+                cmd="install"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+            --run|-r)
+                cmd="execute"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=1
+                shift ;;
+            --status|-s)
+                cmd="status"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+            --uninstall|-u)
+                cmd="uninstall"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+            --update|-U)
+                cmd="get_latest_version"
+                : $(( basic_cmd_cnt+=1 ))
+                filter_option_allowed=0
+                shift ;;
+
+            # options
+            --filter|-f)
+                if [[ $previous_token != "-e" && $previous_token != "--enable" && $previous_token != "" ]]; then
+                    write_to_console $MSG_FILTER_INVALID "$previous_token"
+                    exit 1
+                fi
+                use_filter=true;
+                shift ;;
+            --config|-c)
+                shift
+                if [[ -z "$1" || "${1:0:1}" == "-" ]]; then
+                    write_to_console $MSG_MISSING_CONFIG
+                    invalid_option
+                fi
+                if [[ ! -f "$1" ]]; then
+                    write_to_console $MSG_CONFIG_NOT_FOUND "$1"
+                    exit 1
+                fi
+                FILTER_CONFIG_FILE="$1"
+                shift
+                ;;
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
                 help
                 exit 1
                 ;;
         esac
+        previous_token="$1"
     done
 fi
 
-if [ -z $cmd ]; then
-    help
-    exit 1
+if (( basic_cmd_cnt > 1 )); then
+    invalid_option
+fi
+
+if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
+    invalid_option
 fi
 
 $cmd
