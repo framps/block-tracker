@@ -411,37 +411,37 @@ if [ $# -gt 0 ]; then
         
             --disable|-d)
 				cmd="disable";
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=0
 				shift ;;
 				
             --enable|-e)
 				cmd="enable";
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=1
 				shift ;;
 				
             --install|-i)
 				cmd="install";
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=0
 				shift ;;
 				
             --run|-r)
 				cmd="execute";
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=1
 				shift ;;
 				
             --uninstall|-u)
 				cmd="uninstall"; 
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=0
 				shift ;;
 								
             --filter-test|-F) 
 				cmd="filtertest";
-				let basic_cmd_cnt=$basic_cmd_cnt+1
+				: $(( basic_cmd_cnt+=1 ))
 				filter_option_allowed=0
 				shift ;;
 
