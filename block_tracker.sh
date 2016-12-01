@@ -102,6 +102,12 @@ MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
 MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
+MSG_CONFIG_NOT_FOUND=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIG_NOT_FOUND]="Filter file '%b' not found"
+MSG_DE[$MSG_CONFIG_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
+MSG_MISSING_CONFIG=$((MSG_CNT++))
+MSG_EN[$MSG_MISSING_CONFIG]="Missing config file parameter"
+MSG_DE[$MSG_MISSING_CONFIG]="Konfigurationsdatei nicht angegeben"
 MSG_OPTION_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_OPTION_ERROR]="Invalid options"
 MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionen"
@@ -450,6 +456,20 @@ if [ $# -gt 0 ]; then
             --filter|-f) 
 				use_filter=true; 
 				shift ;;
+
+			--config|-c)
+				shift
+				if [[ -z "$1" || "${1:0:1}" == "-" ]]; then
+					write_to_console $MSG_MISSING_CONFIG
+					invalid_option
+				fi
+				if [[ ! -f "$1" ]]; then
+					write_to_console $MSG_CONFIG_NOT_FOUND "$1"
+					exit 1
+				fi
+				FILTER_CONFIG_FILE="$1"
+				shift
+				;;
 
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
