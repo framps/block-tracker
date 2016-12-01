@@ -100,6 +100,9 @@ MSG_ABORTED=$((MSG_CNT++))
 MSG_EN[$MSG_ABORTED]="Program aborted"
 MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
 MSG_NOT_ROOT=$((MSG_CNT++))
+MSG_FILTER_INVALID=$((MSG_CNT++))
+MSG_DE[$MSG_FILTER_INVALID]="Filter option not allowed with option %b"
+MSG_EN[$MSG_FILTER_INVALID]="Filter Option nicht erlaubt mit Option %b"
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
 MSG_CONFIG_NOT_FOUND=$((MSG_CNT++))
@@ -408,6 +411,7 @@ cmd="execute"
 use_filter=false
 basic_cmd_cnt=0
 filter_option_allowed=1
+previous_token=""
 
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
@@ -454,6 +458,10 @@ if [ $# -gt 0 ]; then
 			# options
 
             --filter|-f) 
+				if [[ $previous_token != "-e" && $previous_token != "--enable" && $previous_token != "" ]]; then
+					write_to_console $MSG_FILTER_INVALID "$previous_token"
+					exit 1
+				fi
 				use_filter=true; 
 				shift ;;
 
@@ -477,6 +485,7 @@ if [ $# -gt 0 ]; then
                 exit 1
                 ;;
         esac
+        previous_token="$1"
     done
 fi
 
