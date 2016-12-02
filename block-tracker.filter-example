@@ -1,0 +1,9 @@
+# Lines starting with a `#' are ignored
+# Extended Regex are supported, refer to the manual of grep for how to use them
+# https://www.gnu.org/software/grep/manual/html_node/Regular-Expressions.html#Regular-Expressions
+
+# Example:
+# Don't block adf.fly and adfoc.us
+# A lot of Minecraft mods use these and if you block them, you can't download those mods
+adf.ly
+adfoc.us
