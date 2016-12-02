@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>block-tracker by ajacobsen</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>block-tracker</h1>
+        <h2>Script to block tracker using /etc/hosts</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/ajacobsen/block-tracker/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/ajacobsen/block-tracker/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/ajacobsen/block-tracker" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <ul>
+<li>
+<a href="#english">README in English</a><br>
+</li>
+<li><a href="#german">README in German</a></li>
+</ul>
+
+<p><a name="english"></a></p>
+
+<h2>
+<a id="english" class="anchor" href="#english" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>English</h2>
+
+<p>This script blocks advertisements by extending the /etc/hosts to block specific websites.</p>
+
+<p>Execute following command to install block-tracker.</p>
+
+<pre><code>wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.2/block_tracker.sh &amp;&amp; sudo bash block-tracker-setup.sh --install &amp;&amp; rm block-tracker-setup.sh
+</code></pre>
+
+<p>This will create <code>/etc/hosts.d/</code> directory and
+copies <code>/etc/hosts</code> to <code>/etc/hosts.d/00-hosts</code>.</p>
+
+<p><em>Note</em>: <code>block-tracker</code> will concatenate all files from <code>/etc/hosts.d/</code> into one file <code>/etc/hosts</code>
+which causes <code>/etc/hosts</code> to be overwritten every time when <code>block-tacker</code> is invoked.
+To add additional local entries which will not be overwritten you have to add them in <code>/etc/hosts.d/00-hosts</code>
+or you create an addional file called <code>/etc/hosts.d/01-myhost</code>
+Leading numbers (00, 01, ..) define the sequence the files will be concatenated.</p>
+
+<p>To uninstall <code>block-tracker</code> just invoke</p>
+
+<pre><code>sudo block-tracker --uninstall
+</code></pre>
+
+<p>During uninstall <code>/etc/hosts.d/00-hosts</code> will be copied to <code>/etc/hosts</code> and directory <code>/etc/hosts.d/</code> and file <code>/usr/local/bin/block-tracker</code> will be deleted.</p>
+
+<p>After installation you have to invoke</p>
+
+<pre><code>sudo block-tracker --run
+</code></pre>
+
+<p>at least once. This will download the lists with bad domains (blocklists), save them to <code>/etc/hosts.d/</code> and enable blocking of all those domains.</p>
+
+<p>To temporarily disable <code>block-tracker</code> invoke</p>
+
+<pre><code>sudo block-tracker --disable
+</code></pre>
+
+<p>To re-enable <code>block-tracker</code> invoke</p>
+
+<pre><code>sudo block-tracker --enable
+</code></pre>
+
+<p>or</p>
+
+<pre><code>sudo block-tracker --run
+</code></pre>
+
+<p>The difference is, that <code>--enable</code> does not download the blocklists.
+You should prefer <code>--enable</code> and use <code>--run</code> only if you want to get the latest version of the blocklists.</p>
+
+<p>To check if <code>block-tracker</code> is enabled/disabled invoke</p>
+
+<pre><code>sudo block-tracker --status
+</code></pre>
+
+<p>To update <code>block-tracker</code> to the latest stable release invoke</p>
+
+<pre><code>sudo block-tracker --update
+</code></pre>
+
+<p><code>block-tracker --help</code> shows a brief description of all options</p>
+
+<p>Configuration and Usage of the domain filter (opition --filter and --filter-test):</p>
+
+<p><em>TODO: document -f/-F</em></p>
+
+<p><code>block-tracker</code> uses following lists:</p>
+
+<ul>
+<li><a href="http://someonewhocares.org/hosts/">http://someonewhocares.org/hosts/</a></li>
+<li><a href="http://winhelp2002.mvps.org/">http://winhelp2002.mvps.org/</a></li>
+<li><a href="http://sysctl.org">http://sysctl.org</a></li>
+<li><a href="http://pgl.yoyo.org">http://pgl.yoyo.org</a></li>
+</ul>
+
+<hr>
+
+<p><a name="german"></a></p>
+
+<h2>
+<a id="german" class="anchor" href="#german" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>German</h2>
+
+<p>Dieses Script blockt mittels hosts Dateien u.a. Werbung.</p>
+
+<p>Zum Installieren, einfach folgenden Befehl ausführen:</p>
+
+<pre><code>wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.2/block_tracker.sh &amp;&amp; sudo bash block-tracker-setup.sh --install &amp;&amp; rm block-tracker-setup.sh
+</code></pre>
+
+<p>Das erstellt den Ordner <code>/etc/hosts.d/</code> und kopiert die Datei <code>/etc/hosts</code> nach <code>/etc/hosts.d/00-hosts</code></p>
+
+<p><em>Hinweis:</em> <code>block-tracker</code> fügt dann alle Dateien in <code>/etc/hosts.d/</code> zu einer <code>/etc/hosts</code>
+zusammen und dadurch wird die Datei <code>/etc/hosts</code> bei jedem Aufruf überschrieben.
+Um eigene Einträge aufzunehmen die nicht überschrieben werden, müssen diese entweder in <code>/etc/hosts.d/00-hosts</code>
+eingetragen werden oder man erstellt eine weitere Datei und macht
+dort die gewünschten Einträge. Z.B. <code>/etc/hosts.d/01-meinedatei</code>
+Durch die führenden Zahlen (00, 01, ..) wird bestimmt in welcher Reihenfolge die Dateien zusammengesetzt werden.</p>
+
+<p>Möchte man das Skript wieder deinstallieren, genügt dieser Befehl:</p>
+
+<pre><code>sudo block-tracker --uninstall
+</code></pre>
+
+<p>Dabei wird die Datei <code>/etc/hosts.d/00-hosts</code> wieder nach <code>/etc/hosts</code> kopiert und das Verzeichnis <code>/etc/hosts.d/</code> sowie die Datei <code>/usr/local/bin/block-tracker</code> gelöscht.</p>
+
+<p>Nach der Installation muss</p>
+
+<pre><code>sudo block-tracker --run
+</code></pre>
+
+<p>ausgeführt werden, um die Blocklisten runterzuladen, in <code>/etc/hosts.d/</code> zu speichern</p>
+
+<p>Um <code>block-tracker</code> vorübergehend zu deaktivieren, benutze</p>
+
+<pre><code>sudo block-tracker --disable
+</code></pre>
+
+<p>Um <code>block-tracker</code> wieder zu aktivieren, benutze</p>
+
+<pre><code>sudo block-tracker --enable
+</code></pre>
+
+<p>oder</p>
+
+<pre><code>sudo block-tracker --run
+</code></pre>
+
+<p>Der Unterschied ist, dass <code>--enable</code> die Blocklisten nicht (erneut) herunterlädt.
+Man sollte <code>--enable</code> bevorzugen, so lange man nicht die Blocklisten aktualisieren möchte.</p>
+
+<p>Um zu prüfen, ob <code>block-tracker</code> aktiviert/deaktiviert ist, benutze</p>
+
+<pre><code>sudo block-tracker --status
+</code></pre>
+
+<p>Um <code>block-tracker</code> auf die neueste stabile Version zu aktualisieren benutze</p>
+
+<pre><code>sudo block-tracker --update
+</code></pre>
+
+<p><code>block-tracker --help</code> zeigt eine kurze Beschreibung aller Optionen.</p>
+
+<p>Konfiguration und Benutzung des Domain-Filter (--filter and --filter-test):</p>
+
+<p><em>TODO: dokumentieree -f/-F</em></p>
+
+<p><code>block-tracker</code> benutzt diese Listen:</p>
+
+<ul>
+<li><a href="http://someonewhocares.org/hosts/">http://someonewhocares.org/hosts/</a></li>
+<li><a href="http://winhelp2002.mvps.org/">http://winhelp2002.mvps.org/</a></li>
+<li><a href="http://sysctl.org">http://sysctl.org</a></li>
+<li><a href="http://pgl.yoyo.org">http://pgl.yoyo.org</a></li>
+</ul>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
