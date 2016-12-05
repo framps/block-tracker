@@ -176,7 +176,7 @@ ${EXECUTABLE_NAME} -U
                                 and disable ${EXECUTABLE_NAME} (See -d|--disable)
   -U, --update                  Upgrade to latest stable release
 
-The complete documentation is available on ${GIT_REPO_URL}."
+The complete documentation is available on https://ajacobsen.github.io/block-tracker/."
 MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
 
 Aufruf:
@@ -204,7 +204,7 @@ ${EXECUTABLE_NAME} -U
                                 und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
   -U, --update                  Aktualisiere auf neueste stabile Version
 
-Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
+Die vollständige Dokumentation ist unter https://ajacobsen.github.io/block-tracker/ verfügbar."
 MSG_MISSING_DEP=$((MSG_CNT++))
 MSG_EN[$MSG_MISSING_DEP]="You need %b to use this feature"
 MSG_DE[$MSG_MISSING_DEP]="Für diese Funktion wird %b benötigt"
