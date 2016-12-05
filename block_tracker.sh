@@ -37,6 +37,9 @@ MSG_DE[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun ausgeschaltet"
 MSG_ENABLED_SUCCESS=$((MSG_CNT++))
 MSG_EN[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} is now enabled"
 MSG_DE[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun eingeschaltet"
+MSG_ENABLE_FAILURE=$((MSG_CNT++))
+MSG_EN[$MSG_ENABLE_FAILURE]="Failed to enable ${EXECUTABLE_NAME}"
+MSG_DE[$MSG_ENABLE_FAILURE]="Fehler beim Einschalten von ${EXECUTABLE_NAME}"
 MSG_PROCESSING_URL=$((MSG_CNT++))
 MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
 MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
@@ -279,17 +282,18 @@ function enable() {
         local rc=$?
         if (( $rc )); then
             write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
+            write_to_console "${MSG_ENABLE_FAILURE}"
         else
             local etcLines finalLines
             etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
             finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
             write_to_console "${MSG_APPLIED_FILTER}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
             cp "${tmpfile}" "${ETC_HOSTS}"
+            write_to_console "${MSG_ENABLED_SUCCESS}"
         fi
         set -e
         rm "${tmpfile}"
     fi
-    write_to_console "${MSG_ENABLED_SUCCESS}"
 
 }
 
@@ -470,20 +474,17 @@ if [ $# -gt 0 ]; then
 					write_to_console $MSG_FILTER_INVALID "$previous_token"
 					exit 1
 				fi
-				use_filter=true; 
-				shift ;;
-
-			--config|-c)
+				use_filter=true; 									# filter enabled
 				shift
-				if [[ -z "$1" || "${1:0:1}" == "-" ]]; then
-					write_to_console $MSG_MISSING_CONFIG 
-					exit 1
+
+				if [[ -z "$1" || "${1:0:1}" == "-" ]]; then			# optional filename passed ?
+					continue
 				fi
-				if [[ ! -f "$1" ]]; then
+				if [[ ! -f "$1" ]]; then							# yes, check if file is valid
 					write_to_console $MSG_CONFIG_FILE_NOT_FOUND "$1"
 					exit 1
 				fi
-				FILTER_CONFIG_FILE="$1"
+				FILTER_CONFIG_FILE="$1"								# use passed filename for filter now
 				shift
 				;;
 
