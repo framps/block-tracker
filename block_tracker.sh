@@ -136,55 +136,73 @@ MSG_ABORTED=$((MSG_CNT++))
 MSG_EN[$MSG_ABORTED]="Program aborted"
 MSG_DE[$MSG_ABORTED]="Programm fehlerhaft beendet"
 MSG_NOT_ROOT=$((MSG_CNT++))
+MSG_FILTER_INVALID=$((MSG_CNT++))
+MSG_DE[$MSG_FILTER_INVALID]="Filter option not allowed with option %b"
+MSG_EN[$MSG_FILTER_INVALID]="Filter Option nicht erlaubt mit Option %b"
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
+MSG_CONFIG_FILE_NOT_FOUND=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIG_FILE_NOT_FOUND]="Filter file '%b' not found"
+MSG_DE[$MSG_CONFIG_FILE_NOT_FOUND]="Filter Datei '%b' nicht gefunden"
+MSG_MISSING_CONFIG=$((MSG_CNT++))
+MSG_EN[$MSG_MISSING_CONFIG]="Missing filter file"
+MSG_DE[$MSG_MISSING_CONFIG]="Filterdatei nicht angegeben "
+MSG_OPTION_ERROR=$((MSG_CNT++))
+MSG_EN[$MSG_OPTION_ERROR]="Invalid combination of options"
+MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
 MSG_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+
 Usage:
 ${EXECUTABLE_NAME} -d
-${EXECUTABLE_NAME} -e [-f]
-${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -e [-f [FILE]]
+${EXECUTABLE_NAME} -F [FILE]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -r [-f [FILE]]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 ${EXECUTABLE_NAME} -U
 
-  -d, --disable       Disable all blacklists
-  -e, --enable        Enable ${EXECUTABLE_NAME} without downloading blacklists
-  -f, --filter        Enable the filter configured in ${FILTER_CONFIG_FILE}
-                      This option is only valid in combination with -e or -r
-  -F, --filter-test   Test the configuration of the filter
-  -i, --install       Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run           Download and enable blacklists
-  -s, --status        Show the current status of block-tracker (enabled/disabled)
-  -u, --uninstall     Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
-                      and disable ${EXECUTABLE_NAME} (See -d|--disable)
-  -U, --update        Upgrade to latest stable release
+  -d, --disable                 Disable all blacklists
+  -e, --enable                  Enable ${EXECUTABLE_NAME} without downloading blacklists
+  -f, --filter [FILE]           Enable the filter configured in FILE.
+                                If FILE is omitted it defaults to ${FILTER_CONFIG_FILE}
+                                This option is only valid in combination with -e or -r
+  -F, --filter-test [FILE]      Test the configuration of the filter and display lines filtered
+  -i, --install                 Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -r, --run                     Download and enable blacklists
+  -s, --status                  Show the current status of block-tracker (enabled/disabled)
+  -u, --uninstall               Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
+                                and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -U, --update                  Upgrade to latest stable release
 
-The complete documentation is avialable under ${GIT_REPO_URL}."
+The complete documentation is available on ${GIT_REPO_URL}."
 MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
+
 Aufruf:
 ${EXECUTABLE_NAME} -d
-${EXECUTABLE_NAME} -e [-f]
-${EXECUTABLE_NAME} -F
+${EXECUTABLE_NAME} -e [-f [DATEI]]
+${EXECUTABLE_NAME} -F [DATEI]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f]
+${EXECUTABLE_NAME} -r [-f [DATEI]]
 ${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
 ${EXECUTABLE_NAME} -U
 
-  -d, --disable       Deaktiviere alle blacklists
-  -e, --enable        Aktiviere ${EXECUTABLE_NAME} ohne blacklists runterzuladen
-  -f, --filter        Aktiviere den in ${FILTER_CONFIG_FILE} konfigurierten Filter
-                      Diese Option ist nur gültig in Kombination mit -e or -r
-  -F, --filter-test   Teste die Konfiguration des Filters
-  -i, --install       Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run           Lade und aktiviere blacklists
-  -s, --status        Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
-  -u, --uninstall     Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
-                      und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
-  -U, --update        Aktualisiere auf neueste stabile Version
+  -d, --disable                 Deaktiviere alle blacklists
+  -e, --enable                  Aktiviere "${EXECUTABLE_NAME}" ohne blacklists runterzuladen
+  -f, --filter [DATEI]          Aktiviere den Filter DATEI, wenn DATEI ausgelassen wird,
+                                wird "${FILTER_CONFIG_FILE}" verwendet.
+                                Alternativ kann mit -c oder --config eine andere Filterdatei
+                                angegeben werden.
+                                Diese Option ist nur gültig in Kombination mit -e or -r
+  -F, --filter-test [DATEI]     Teste die Konfiguration des Filters und liste welche Zeilen gefiltert
+  -i, --install                 Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
+  -r, --run                     Lade und aktiviere blacklists werden
+  -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
+  -u, --uninstall               Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
+                                und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -U, --update                  Aktualisiere auf neueste stabile Version
 
 Die vollständige Dokumentation ist unter ${GIT_REPO_URL} verfügbar."
 MSG_MISSING_DEP=$((MSG_CNT++))
@@ -358,6 +376,12 @@ function filtertest() {
 
 }
 
+function invalid_option() {
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_HELP
+    exit 1
+}
+
 function get_latest_version() {
     if which jq > /dev/null 2>&1; then
         if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
@@ -474,18 +498,67 @@ if [ $UID -ne 0 ]; then
 fi
 
 use_filter=false
+basic_cmd_cnt=0
+filter_option_allowed=1
+previous_token=""
+
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
         case "$1" in
-            --disable|-d) cmd="disable" ; shift ;;
-            --enable|-e) cmd="enable" ; shift ;;
-            --install|-i) cmd="install" ; shift ;;
-            --run|-r) cmd="execute" ; shift ;;
-            --uninstall|-u) cmd="uninstall" ; shift ;;
-            --filter|-f) use_filter=true ; shift ;;
-            --filter-test|-F) cmd="filtertest" ; shift ;;
-            --status|-s) cmd="status" ; shift ;;
-            --update|-U) cmd="get_latest_version" ; shift ;;
+            # basic commands
+            --disable|-d)
+                cmd="disable"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                shift ;;
+            --enable|-e)
+                cmd="enable"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=1
+                shift ;;
+            --filter-test|-F)
+                cmd="filtertest"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                if [[ -n "${2}" && ! "${2:0:1}" == "-"  ]]; then
+                    FILTER_CONFIG_FILE="${2}"
+                    shift
+                fi
+                shift ;;
+            --install|-i)
+                cmd="install"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                shift ;;
+            --run|-r)
+                cmd="execute"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=1
+                shift ;;
+            --status|-s)
+                cmd="status"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                shift ;;
+            --uninstall|-u)
+                cmd="uninstall"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                shift ;;
+            --update|-U)
+                cmd="get_latest_version"
+                : $(( basic_cmd_cnt++ ))
+                filter_option_allowed=0
+                shift ;;
+
+            # options
+            --filter|-f)
+                use_filter=true;
+                if [[ -n "${2}" && ! "${2:0:1}" == "-"  ]]; then
+                    FILTER_CONFIG_FILE="${2}"
+                    shift
+                fi
+                shift ;;
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
                 help
@@ -495,9 +568,17 @@ if [ $# -gt 0 ]; then
     done
 fi
 
-if [ -z $cmd ]; then
+if [[ -z "${cmd}" ]]; then
     help
     exit 1
+fi
+
+if (( basic_cmd_cnt > 1 )); then
+    invalid_option
+fi
+
+if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
+    invalid_option
 fi
 
 $cmd
