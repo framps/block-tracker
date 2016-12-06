@@ -362,7 +362,7 @@ function filtertest() {
             write_to_console "${MSG_FILTER_FAILURE}" "${FILTER_CONFIG_FILE}" "${rc}"
         else
             local etcLines finalLines
-            etcLines=$(wc -l ${ETC_HOSTS} | cut -d ' ' -f 1)
+            etcLines=$(wc -l ${test_etc} | cut -d ' ' -f 1)
             finalLines=$(wc -l ${tmpfile} | cut -d ' ' -f 1)
             write_to_console "${MSG_FILTER_RESULT}" "${FILTER_CONFIG_FILE}" "$(( etcLines - finalLines ))"
             cut -d " " -f 2 "${test_etc}" | grep -xEf ${FILTER_CONFIG_FILE}
