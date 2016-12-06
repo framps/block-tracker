@@ -395,6 +395,9 @@ function get_latest_version() {
 			exit 0
 		fi
 		set -e
+	else
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		exit 0
 	fi
 
 	doInstall "${url}"
