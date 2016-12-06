@@ -31,6 +31,7 @@ GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_BRANCH="master"
 GITHUB_REPO="ajacobsen/block-tracker"
 GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
+GITHUB_LATEST_RELEASE_URL="https://api.${GITHUB_URL}/repos/${GITHUB_REPO}/releases/latest"
 if [ ${RELEASED} == true ]; then
     GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${VERSION}/${INSTALL_NAME}.sh"
 else
@@ -383,27 +384,23 @@ function invalid_option() {
 }
 
 function get_latest_version() {
-    if which jq > /dev/null 2>&1; then
-        if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-            local latest_version=$(curl -s https://api.github.com/repos/ajacobsen/block-tracker/releases/latest |jq -r ".tag_name")
-            write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
-            write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
-            local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
-            set +e          # TBD: hack
-            askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"
-            if (( ! $? )); then
-                exit 0
-            fi
-            set -e
-        else
-            write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-            exit 0
-        fi
+	if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+		local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
+		write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
+		write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
+		local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
+		set +e          # TBD: hack
+		askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"
+		if (( ! $? )); then
+			exit 0
+		fi
+		set -e
+	else
+		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+		exit 0
+	fi
 
-        doInstall "${url}"
-    else
-        write_to_console "${MSG_MISSING_DEP}" "jq"
-    fi
+	doInstall "${url}"
 }
 
 function help() {
@@ -520,7 +517,7 @@ if [ $# -gt 0 ]; then
                 cmd="filtertest"
                 : $(( basic_cmd_cnt++ ))
                 filter_option_allowed=0
-                if [[ -n "${2}" && ! "${2:0:1}" == "-"  ]]; then
+                if [[ -n "${2}" && "${2:0:1}" != "-"  ]]; then
                     FILTER_CONFIG_FILE="${2}"
                     shift
                 fi
@@ -554,7 +551,7 @@ if [ $# -gt 0 ]; then
             # options
             --filter|-f)
                 use_filter=true;
-                if [[ -n "${2}" && ! "${2:0:1}" == "-"  ]]; then
+                if [[ -n "${2}" && "${2:0:1}" != "-"  ]]; then
                     FILTER_CONFIG_FILE="${2}"
                     shift
                 fi
