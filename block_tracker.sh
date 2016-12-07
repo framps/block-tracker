@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# *Credits*
+# I acknowledge and I'm grateful to framps (framp at linux-tips-and-tricks dot de)
+# for his contribution to block_tracker.
 
 set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
 
