@@ -19,7 +19,7 @@
 set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
 
 VERSION="v0.0.3"
-RELEASED=false
+RELEASED=true
 
 # various constants
 
