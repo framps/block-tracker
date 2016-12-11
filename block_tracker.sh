@@ -20,7 +20,7 @@
 # I acknowledge and I'm grateful to framps (framp at linux-tips-and-tricks dot de)
 # for his contribution to block_tracker.
 
-set -e -o pipefail                                      # see https://sipb.mit.edu/doc/safe-shell/
+set -e -o pipefail -o errtrace                          # see https://sipb.mit.edu/doc/safe-shell/
 
 VERSION="v0.0.4"
 RELEASED=false
@@ -33,24 +33,37 @@ EXECUTABLE_NAME=${INSTALL_NAME/_/-}                     # executable has hypen i
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_BRANCH="master"
-GITHUB_REPO="ajacobsen/block-tracker"
+GITHUB_REPO_OWNER="${GITHUB_REPO_OWNER:-ajacobsen}"
+GITHUB_REPO="${GITHUB_REPO_OWNER}/${EXECUTABLE_NAME}"
+
+ETC_HOSTS_D_DIR="/etc/hosts.d"
+ETC_HOSTS="/etc/hosts"
+
+# various dependent constants
+
 GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
+GITHUB_ISSUES_URL="https://$GITHUB_URL/$GITHUB_REPO/issues"
 GITHUB_LATEST_RELEASE_URL="https://api.${GITHUB_URL}/repos/${GITHUB_REPO}/releases/latest"
+GITHUB_TRACKER_URLs="${EXECUTABLE_NAME}.urls"
+GITHUB_TRACKER_URLs_DOWNLOAD_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${GITHUB_TRACKER_URLs}"
 if [ ${RELEASED} == true ]; then
     GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${VERSION}/${INSTALL_NAME}.sh"
 else
     GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
 fi
-ETC_HOSTS_D_DIR="/etc/hosts.d"
-ETC_HOSTS="/etc/hosts"
-FILTER_CONFIG_FILE="/etc/block-tracker.filter"
+
+FILTER_CONFIG_FILE="/etc/${EXECUTABLE_NAME}.filter"
+CHECKSUM_FILE="/etc/${EXECUTABLE_NAME}.checksum"
+ETC_HOSTS_TRACKER_FILTER="${ETC_HOSTS_D_DIR}/[12345]*-*" 
+
+declare -A TRACKER_URLs
 
 # runtime messages
 
 MSG_CNT=0
 MSG_DOWNLOAD_FAILED=$((MSG_CNT++))
-MSG_EN[$MSG_DOWNLOAD_FAILED]="WARNING! Failed to download %b!"
-MSG_DE[$MSG_DOWNLOAD_FAILED]="WARNUNG! Download von %b fehlgeschlagen!"
+MSG_EN[$MSG_DOWNLOAD_FAILED]="WARNING! Failed to download %b"
+MSG_DE[$MSG_DOWNLOAD_FAILED]="WARNUNG! Download von %b fehlgeschlagen"
 MSG_NOT_ROOT=$((MSG_CNT++))
 MSG_EN[$MSG_NOT_ROOT]="You have to be root!"
 MSG_DE[$MSG_NOT_ROOT]="Du musst root sein!"
@@ -63,9 +76,12 @@ MSG_DE[$MSG_DISABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun ausgeschaltet"
 MSG_ENABLED_SUCCESS=$((MSG_CNT++))
 MSG_EN[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} is now enabled"
 MSG_DE[$MSG_ENABLED_SUCCESS]="${EXECUTABLE_NAME} ist nun eingeschaltet"
+MSG_DOWNLOADING_URL=$((MSG_CNT++))
+MSG_EN[$MSG_DOWNLOADING_URL]="Downloading %b"
+MSG_DE[$MSG_DOWNLOADING_URL]="%b wird runtergeladen"
 MSG_PROCESSING_URL=$((MSG_CNT++))
-MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing %b"
-MSG_DE[$MSG_PROCESSING_URL]="%b wird runtergeladen und bearbeitet"
+MSG_EN[$MSG_PROCESSING_URL]="Downloading and processing tracker file %b"
+MSG_DE[$MSG_PROCESSING_URL]="Tracker Datei %b wird runtergeladen und bearbeitet"
 MSG_APPLIED_FILTER=$((MSG_CNT++))
 MSG_EN[$MSG_APPLIED_FILTER]="Filter %b removes %b lines"
 MSG_DE[$MSG_APPLIED_FILTER]="Filter %b entfernt %b Zeilen"
@@ -129,8 +145,12 @@ MSG_DE[$MSG_UPGRADE]="%b auf Version %b aktualisieren? [%b]"
 
 MSG_CNT=200
 MSG_UNKNOWN_OPTION=$((MSG_CNT++))
-MSG_EN[$MSG_UNKNOWN_OPTION]="Unknown option %b"
-MSG_DE[$MSG_UNKNOWN_OPTION]="Unbekannte Option %b"
+MSG_UNEXPECTED_ERROR=$((MSG_CNT++))
+MSG_EN[$MSG_UNEXPECTED_ERROR]="Unexpected error occured in version %b. Please report following stacktrace on ${GITHUB_ISSUES_URL}"
+MSG_DE[$MSG_UNEXPECTED_ERROR]="Ein nicht erwarteter Fehler trat in version %b auf. Bitte berichte diesen Stacktrace auf ${GITHUB_ISSUES_URL}"
+MSG_CLEANING_UP_TRACKER_FILES=$((MSG_CNT++))
+MSG_EN[$MSG_CLEANING_UP_TRACKER_FILES]="Cleaning up %b old tracker files"
+MSG_DE[$MSG_CLEANING_UP_TRACKER_FILES]="%b alte Tracker Dateien werden gelöscht"
 MSG_UNDEFINED=$((MSG_CNT++))
 MSG_EN[$MSG_UNDEFINED]="Undefined message number %b. Please report this error."
 MSG_DE[$MSG_UNDEFINED]="Unbekannte Meldungsnummer %b. Bitte melde diesen Fehler."
@@ -210,9 +230,6 @@ ${EXECUTABLE_NAME} -U
   -U, --update                  Aktualisiere auf neueste stabile Version
 
 Die vollständige Dokumentation ist unter https://ajacobsen.github.io/block-tracker/ verfügbar."
-MSG_MISSING_DEP=$((MSG_CNT++))
-MSG_EN[$MSG_MISSING_DEP]="You need %b to use this feature"
-MSG_DE[$MSG_MISSING_DEP]="Für diese Funktion wird %b benötigt"
 
 MSGVAR="MSG_$(tr '[:lower:]' '[:upper:]' <<< ${LANG:0:2})"
 
@@ -224,7 +241,7 @@ function abort() {
 function askYesNo() { # messageid message_parameters
     local response
     local yesno=$(get_message "$MSG_YES_NO")
-    ask_from_console "$1" ${@:2} ${yesno}
+    ask_from_console "$1" "${@:2}" "${yesno}"
     yesno=${yesno,,}
     local yes="${yesno:0:1}"
     read -sn 1 response
@@ -232,9 +249,9 @@ function askYesNo() { # messageid message_parameters
     echo
 
     if [[ ${response} == ${yes} ]]; then
-        return 1
-    else
         return 0
+    else
+        return 1
     fi
 }
 
@@ -245,12 +262,9 @@ function uninstall() {
         exit 1
     fi
 
-    set +e              # TBD: hack
-    askYesNo ${MSG_CONFIRM_UNINSTALL}
-    if (( ! $? )); then
+    ! if ! askYesNo "${MSG_CONFIRM_UNINSTALL}"; then
         exit 1
     fi
-    set -e
 
     write_to_console "${MSG_PROCESSING_UNINSTALL}" "${EXECUTABLE_NAME}"
     cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
@@ -261,12 +275,9 @@ function uninstall() {
 
 function install() {
     if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-        set +e          # TBD: hack
-        askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"
-        if (( ! $? )); then
+        ! if ! askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"; then
             exit 0
         fi
-        set -e
     fi
 
     doInstall "${GIT_INSTALL_URL}"
@@ -302,7 +313,7 @@ function process_etc() { # resultfile
         exit 1
     fi
 
-    if [[ $(ls -1 ${ETC_HOSTS_D_DIR}/[01234]0-* | wc -l) != "5" ]]; then
+    if [[ $(ls -1 ${ETC_HOSTS_TRACKER_FILTER} | wc -l 2>/dev/null) == "0" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         help
         exit 1
@@ -389,16 +400,13 @@ function invalid_option() {
 
 function get_latest_version() {
 	if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-		local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
+		! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
 		write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
 		write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
 		local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
-		set +e          # TBD: hack
-		askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"
-		if (( ! $? )); then
+		! if ! askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"; then
 			exit 0
 		fi
-		set -e
 	else
 		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
 		exit 0
@@ -408,35 +416,64 @@ function get_latest_version() {
 }
 
 function help() {
-    write_to_console "${MSG_HELP}"                          # TBD
+    write_to_console "${MSG_HELP}"         
 }
 
-function download () {
+function retrieveTrackerUrls() {
+	
+	local url regex
+	local tmpfile=$(mktemp)
+	
+	write_to_console ${MSG_DOWNLOADING_URL} "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
+	if ! wget -qO ${tmpfile} ${GITHUB_TRACKER_URLs_DOWNLOAD_URL}; then
+		write_to_console "${MSG_DOWNLOAD_FAILED}" "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
+		abort
+	fi
+	
+	while IFS=$'\t' read -r url regex; do
+		[[ $url =~ ^# ]] && continue			# skip comments
+		TRACKER_URLs[${url}]="$regex"
+	done < ${tmpfile}
+	rm ${tmpfile}
+
+}
+
+function downloadTrackerFiles () {
+	
+	retrieveTrackerUrls
+	
     # Download der hosts Dateien
     # Entfernen von carriage returns
     # Entfernen von localhost und broadcast Adressen
     # Entfernen von allen Kommentaren
     # Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
     # Entfernen von Leerzeilen
-    write_to_console "${MSG_PROCESSING_URL}" "http://winhelp2002.mvps.org"
-    wget -qO - "http://winhelp2002.mvps.org/hosts.txt"| \
-    sed -e 's/\r//' -e '/^0/!d' -e 's/#.*$//'> "${ETC_HOSTS_D_DIR}/10-mvpblocklist" || \
-    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://winhelp2002.mvps.org/hosts.txt"; abort )
+    
+    local url regex src
 
-    write_to_console "${MSG_PROCESSING_URL}" "http://someonewhocares.org"
-    wget -qO - "http://someonewhocares.org/hosts/zero/hosts"| \
-    sed -e '/^0/!d' -e 's/#.*$//' > "${ETC_HOSTS_D_DIR}/20-some1whocaresblocklist" || \
-    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://someonewhocares.org/hosts/zero/hosts"; abort )
+	# remove old configs
+	! oldFilesCount=$(ls -1 ${ETC_HOSTS_TRACKER_FILTER} 2>/dev/null | wc -l)
+	if (( oldFilesCount > 0 )); then
+		write_to_console "${MSG_CLEANING_UP_TRACKER_FILES}" "$oldFilesCount"
+    	for file in $(ls -1 $ETC_HOSTS_TRACKER_FILTER 2>/dev/null); do
+			rm $file &>/dev/null
+		done
+	fi
+	
+	local cnt=10
+	local tmpfile=$(mktemp)
 
-    write_to_console "${MSG_PROCESSING_URL}" "http://sysctl.org"
-    wget -qO - "http://sysctl.org/cameleon/hosts"| \
-    sed -e '/^127.0.0.1.*localhost$/d' -e 's/^127.0.0.1/0.0.0.0/' -e 's/[\t]//g' -e '/^0/!d' > "${ETC_HOSTS_D_DIR}/30-sysctlblocklist" || \
-    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://sysctl.org/cameleon/hosts"; abort )
-
-    write_to_console "${MSG_PROCESSING_URL}" "http://pgl.yoyo.org"
-    wget -qO - "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"| \
-    sed -e '/^0/!d' > "${ETC_HOSTS_D_DIR}/40-yoyo.orgblocklist" || \
-    ( write_to_console "${MSG_DOWNLOAD_FAILED}" "http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext"; abort )
+    for url in "${!TRACKER_URLs[@]}"; do
+		regex="${TRACKER_URLs[$url]}"		
+		write_to_console "${MSG_PROCESSING_URL}" "$url"
+		if ! wget -qO "${tmpfile}" "$url"; then
+			write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
+			abort
+		fi
+		printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${cnt}-blocklist"
+		: $(( cnt++ ))
+	done
+	rm $tmpfile
 
 }
 
@@ -447,7 +484,7 @@ function execute () {
         exit 1
     fi
 
-    download
+    downloadTrackerFiles
     enable
 
 }
@@ -462,6 +499,20 @@ function get_message() { #messagenumber
         msg="${MSG_EN[$msgn]}"
     fi
     echo "$msg"
+}
+
+function handleErrorTrap() {
+	write_to_console "${MSG_UNEXPECTED_ERROR}" "$VERSION"
+	logStack
+}
+
+function logStack () {
+	local l=0
+	local frames=${#BASH_LINENO[@]}
+	for ((l=frames-2; l>=0; l--)); do
+		echo '  File' \"${BASH_SOURCE[l+1]}\", line ${BASH_LINENO[l]}, in ${FUNCNAME[l+1]}
+#		sed -En "${BASH_LINENO[l]}{s/^([ \t]*)/: /;p}" "${BASH_SOURCE[l+1]}"
+	done
 }
 
 function write_to_console() { #messagenumber parm1 ... parmn
@@ -497,6 +548,8 @@ if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
     exit 1
 fi
+
+trap handleErrorTrap ERR 
 
 use_filter=false
 basic_cmd_cnt=0
@@ -561,7 +614,7 @@ if [ $# -gt 0 ]; then
                 fi
                 shift ;;
             *)
-                write_to_console $MSG_UNKNOWN_OPTION "$1" # TBD should write help message with all accepted options
+                write_to_console $MSG_UNKNOWN_OPTION "$1" 
                 help
                 exit 1
                 ;;
