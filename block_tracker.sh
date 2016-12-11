@@ -54,7 +54,7 @@ fi
 
 FILTER_CONFIG_FILE="/etc/${EXECUTABLE_NAME}.filter"
 CHECKSUM_FILE="/etc/${EXECUTABLE_NAME}.checksum"
-ETC_HOSTS_TRACKER_FILTER="${ETC_HOSTS_D_DIR}/[12345]*-*" 
+ETC_HOSTS_TRACKER_FILTER="${ETC_HOSTS_D_DIR}/[12345]*-*"
 
 declare -A TRACKER_URLs
 
@@ -294,7 +294,7 @@ function doInstall() { # install_url
 }
 
 function disable() {
-    # Prüfe ob /etc/hosts.d und /etc/hosts.d/00-hosts existieren
+    # Check if /etc/hosts.d and /etc/hosts.d/00-hosts exist
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         help
@@ -306,7 +306,6 @@ function disable() {
 }
 
 function process_etc() { # resultfile
-
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         help
@@ -331,7 +330,6 @@ function process_etc() { # resultfile
 }
 
 function enable() {
-
     process_etc "${ETC_HOSTS}"
 
     if [ ${use_filter} == true ]; then
@@ -360,7 +358,6 @@ function enable() {
 }
 
 function filtertest() {
-
     if [ -f ${FILTER_CONFIG_FILE} ]; then
         local test_etc=$(mktemp)
         process_etc "${test_etc}"
@@ -399,81 +396,72 @@ function invalid_option() {
 }
 
 function get_latest_version() {
-	if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
-		! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
-		write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
-		write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
-		local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
-		! if ! askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"; then
-			exit 0
-		fi
-	else
-		write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-		exit 0
-	fi
+    if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+        ! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
+        write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
+        write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
+        local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
+        ! if ! askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"; then
+            exit 0
+        fi
+    else
+        write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
+        exit 0
+    fi
 
-	doInstall "${url}"
+    doInstall "${url}"
 }
 
 function help() {
-    write_to_console "${MSG_HELP}"         
+    write_to_console "${MSG_HELP}"
 }
 
 function retrieveTrackerUrls() {
-	
-	local url regex
-	local tmpfile=$(mktemp)
-	
-	write_to_console ${MSG_DOWNLOADING_URL} "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
-	if ! wget -qO ${tmpfile} ${GITHUB_TRACKER_URLs_DOWNLOAD_URL}; then
-		write_to_console "${MSG_DOWNLOAD_FAILED}" "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
-		abort
-	fi
-	
-	while IFS=$'\t' read -r url regex; do
-		[[ $url =~ ^# ]] && continue			# skip comments
-		TRACKER_URLs[${url}]="$regex"
-	done < ${tmpfile}
-	rm ${tmpfile}
+    local url regex
+    local tmpfile=$(mktemp)
+
+    write_to_console ${MSG_DOWNLOADING_URL} "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
+    if ! wget -qO ${tmpfile} ${GITHUB_TRACKER_URLs_DOWNLOAD_URL}; then
+        write_to_console "${MSG_DOWNLOAD_FAILED}" "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
+        abort
+    fi
+
+    while IFS=$'\t' read -r url regex; do
+        [[ $url =~ ^# ]] && continue            # skip comments
+        TRACKER_URLs[${url}]="$regex"
+    done < ${tmpfile}
+    rm ${tmpfile}
 
 }
 
 function downloadTrackerFiles () {
-	
-	retrieveTrackerUrls
-	
-    # Download der hosts Dateien
-    # Entfernen von carriage returns
-    # Entfernen von localhost und broadcast Adressen
-    # Entfernen von allen Kommentaren
-    # Entfernen aller Zeilen, die nicht mit 0.0.0.0 beginnen
-    # Entfernen von Leerzeilen
-    
+    retrieveTrackerUrls
+
     local url regex src
 
-	# remove old configs
-	! oldFilesCount=$(ls -1 ${ETC_HOSTS_TRACKER_FILTER} 2>/dev/null | wc -l)
-	if (( oldFilesCount > 0 )); then
-		write_to_console "${MSG_CLEANING_UP_TRACKER_FILES}" "$oldFilesCount"
-    	for file in $(ls -1 $ETC_HOSTS_TRACKER_FILTER 2>/dev/null); do
-			rm $file &>/dev/null
-		done
-	fi
-	
-	local cnt=10
-	local tmpfile=$(mktemp)
+    # remove old configs
+    ! oldFilesCount=$(ls -1 ${ETC_HOSTS_TRACKER_FILTER} 2>/dev/null | wc -l)
+    if (( oldFilesCount > 0 )); then
+        write_to_console "${MSG_CLEANING_UP_TRACKER_FILES}" "$oldFilesCount"
+        for file in $(ls -1 $ETC_HOSTS_TRACKER_FILTER 2>/dev/null); do
+            rm $file &>/dev/null
+        done
+    fi
+
+    local cnt=10
+    local tmpfile=$(mktemp)
 
     for url in "${!TRACKER_URLs[@]}"; do
-		regex="${TRACKER_URLs[$url]}"		
-		write_to_console "${MSG_PROCESSING_URL}" "$url"
-		if ! wget -qO "${tmpfile}" "$url"; then
-			write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
-			abort
-		fi
-		printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${cnt}-blocklist"
-		: $(( cnt++ ))
-	done
-	rm $tmpfile
+        regex="${TRACKER_URLs[$url]}"
+        write_to_console "${MSG_PROCESSING_URL}" "$url"
+        if ! wget -qO "${tmpfile}" "$url"; then
+            write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
+            abort
+        fi
+        printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${cnt}-blocklist"
+        : $(( cnt++ ))
+    done
+    rm $tmpfile
 
 }
 
@@ -502,17 +490,17 @@ function get_message() { #messagenumber
 }
 
 function handleErrorTrap() {
-	write_to_console "${MSG_UNEXPECTED_ERROR}" "$VERSION"
-	logStack
+    write_to_console "${MSG_UNEXPECTED_ERROR}" "$VERSION"
+    logStack
 }
 
 function logStack () {
-	local l=0
-	local frames=${#BASH_LINENO[@]}
-	for ((l=frames-2; l>=0; l--)); do
-		echo '  File' \"${BASH_SOURCE[l+1]}\", line ${BASH_LINENO[l]}, in ${FUNCNAME[l+1]}
-#		sed -En "${BASH_LINENO[l]}{s/^([ \t]*)/: /;p}" "${BASH_SOURCE[l+1]}"
-	done
+    local l=0
+    local frames=${#BASH_LINENO[@]}
+    for ((l=frames-2; l>=0; l--)); do
+        echo '  File' \"${BASH_SOURCE[l+1]}\", line ${BASH_LINENO[l]}, in ${FUNCNAME[l+1]}
+#        sed -En "${BASH_LINENO[l]}{s/^([ \t]*)/: /;p}" "${BASH_SOURCE[l+1]}"
+    done
 }
 
 function write_to_console() { #messagenumber parm1 ... parmn
@@ -549,7 +537,7 @@ if [ $UID -ne 0 ]; then
     exit 1
 fi
 
-trap handleErrorTrap ERR 
+trap handleErrorTrap ERR
 
 use_filter=false
 basic_cmd_cnt=0
@@ -614,7 +602,7 @@ if [ $# -gt 0 ]; then
                 fi
                 shift ;;
             *)
-                write_to_console $MSG_UNKNOWN_OPTION "$1" 
+                write_to_console $MSG_UNKNOWN_OPTION "$1"
                 help
                 exit 1
                 ;;
