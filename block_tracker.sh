@@ -137,6 +137,9 @@ MSG_DE[$MSG_REINSTALL]="%b erneut installieren? [%b] "
 MSG_UPGRADE="$((MSG_CNT++))"
 MSG_EN[$MSG_UPGRADE]="Upgrade %b to version %b? [%b]"
 MSG_DE[$MSG_UPGRADE]="%b auf Version %b aktualisieren? [%b]"
+MSG_TRACKER_FILE_UPTODATE="$((MSG_CNT++))"
+MSG_EN[$MSG_TRACKER_FILE_UPTODATE]="File %b is up-to-date, skipping"
+MSG_DE[$MSG_TRACKER_FILE_UPTODATE]="Datei %b ist aktuell, überspringe"
 
 # common messages
 
@@ -443,7 +446,7 @@ function downloadTrackerFiles() {
             fi
             printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${name}"
         else
-            echo "File ${name} is up to date, skipping"
+            write_to_console "${MSG_TRACKER_FILE_UPTODATE}" "${name}"
         fi
     done < ${urlfile}
     rm ${urlfile}
