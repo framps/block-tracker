@@ -53,10 +53,7 @@ else
 fi
 
 FILTER_CONFIG_FILE="/etc/${EXECUTABLE_NAME}.filter"
-CHECKSUM_FILE="/etc/${EXECUTABLE_NAME}.checksum"
-ETC_HOSTS_TRACKER_FILTER="${ETC_HOSTS_D_DIR}/[12345]*-*"
-
-declare -A TRACKER_URLs
+ETC_HOSTS_TRACKER_FILTER="${ETC_HOSTS_D_DIR}/[123456789]0-*"
 
 # runtime messages
 
@@ -318,6 +315,7 @@ function process_etc() { # resultfile
         exit 1
     fi
 
+
     local result_file="$1"
 
     # Insert comment
@@ -416,53 +414,40 @@ function help() {
     write_to_console "${MSG_HELP}"
 }
 
-function retrieveTrackerUrls() {
-    local url regex
+function get_latest_update { # url
+    local last_update
+
+    last_update=$(curl -sI "${1}" |sed -n 's/Last-Modified: //p')
+    last_update=$(date '+%s' -d "${last_update}")
+    echo ${last_update}
+}
+
+function downloadTrackerFiles() {
+    local name url regex
+    local urlfile=$(mktemp)
     local tmpfile=$(mktemp)
 
     write_to_console ${MSG_DOWNLOADING_URL} "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
-    if ! wget -qO ${tmpfile} ${GITHUB_TRACKER_URLs_DOWNLOAD_URL}; then
+    if ! wget -qO ${urlfile} ${GITHUB_TRACKER_URLs_DOWNLOAD_URL}; then
         write_to_console "${MSG_DOWNLOAD_FAILED}" "${GITHUB_TRACKER_URLs_DOWNLOAD_URL}"
         abort
     fi
 
-    while IFS=$'\t' read -r url regex; do
-        [[ $url =~ ^# ]] && continue            # skip comments
-        TRACKER_URLs[${url}]="$regex"
-    done < ${tmpfile}
-    rm ${tmpfile}
-
-}
-
-function downloadTrackerFiles () {
-    retrieveTrackerUrls
-
-    local url regex src
-
-    # remove old configs
-    ! oldFilesCount=$(ls -1 ${ETC_HOSTS_TRACKER_FILTER} 2>/dev/null | wc -l)
-    if (( oldFilesCount > 0 )); then
-        write_to_console "${MSG_CLEANING_UP_TRACKER_FILES}" "$oldFilesCount"
-        for file in $(ls -1 $ETC_HOSTS_TRACKER_FILTER 2>/dev/null); do
-            rm $file &>/dev/null
-        done
-    fi
-
-    local cnt=10
-    local tmpfile=$(mktemp)
-
-    for url in "${!TRACKER_URLs[@]}"; do
-        regex="${TRACKER_URLs[$url]}"
+    while IFS=$'\t' read -r name url regex; do
+        [[ $name =~ ^# ]] && continue # skip comments
         write_to_console "${MSG_PROCESSING_URL}" "$url"
-        if ! wget -qO "${tmpfile}" "$url"; then
-            write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
-            abort
+        if [[ ! -f ${ETC_HOSTS_D_DIR}/${name} || $(get_latest_update "${url}") > $(stat -c %Z ${ETC_HOSTS_D_DIR}/${name}) ]]; then
+            if ! wget -qO "${tmpfile}" "$url"; then
+                write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
+                abort
+            fi
+            printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${name}"
+        else
+            echo "File ${name} is up to date, skipping"
         fi
-        printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${cnt}-blocklist"
-        : $(( cnt++ ))
-    done
-    rm $tmpfile
-
+    done < ${urlfile}
+    rm ${urlfile}
+    rm ${tmpfile}
 }
 
 function execute () {
@@ -474,7 +459,6 @@ function execute () {
 
     downloadTrackerFiles
     enable
-
 }
 
 function get_message() { #messagenumber
