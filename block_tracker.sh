@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # *Credits*
-# I acknowledge and I'm grateful to framps (framp at linux-tips-and-tricks dot de)
+# I acknowledge and I'm grateful to framp (framp at linux-tips-and-tricks dot de)
 # for his contribution to block_tracker.
 
 set -e -o pipefail -o errtrace                          # see https://sipb.mit.edu/doc/safe-shell/
@@ -144,10 +144,18 @@ MSG_DE[$MSG_TRACKER_FILE_UPTODATE]="Datei %b ist aktuell, überspringe"
 # common messages
 
 MSG_CNT=200
+MSG_CALL_HELP=$((MSG_CNT++))
+MSG_EN[$MSG_CALL_HELP]="Use option -h or pass no option to get a list of all commands and options"
+MSG_DE[$MSG_CALL_HELP]="Benutze die Option -h oder keine Option um Details zu den Befehlen und Optionen zu erhalten"
 MSG_UNKNOWN_OPTION=$((MSG_CNT++))
+MSG_EN[$MSG_UNKNOWN_OPTION]="Unknown option %b"
+MSG_DE[$MSG_UNKNOWN_OPTION]="Ungültige Option %b"
+MSG_VERSION_INFO=$((MSG_CNT++))
+MSG_EN[$MSG_VERSION_INFO]="$EXECUTABLE_NAME - $VERSION"
+MSG_DE[$MSG_VERSION_INFO]="$EXECUTABLE_NAME - $VERSION"
 MSG_UNEXPECTED_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_UNEXPECTED_ERROR]="Unexpected error occured in version %b. Please report following stacktrace on ${GITHUB_ISSUES_URL}"
-MSG_DE[$MSG_UNEXPECTED_ERROR]="Ein nicht erwarteter Fehler trat in version %b auf. Bitte berichte diesen Stacktrace auf ${GITHUB_ISSUES_URL}"
+MSG_DE[$MSG_UNEXPECTED_ERROR]="Ein nicht erwarteter Fehler trat in Version %b auf. Bitte berichte diesen Stacktrace auf ${GITHUB_ISSUES_URL}"
 MSG_CLEANING_UP_TRACKER_FILES=$((MSG_CNT++))
 MSG_EN[$MSG_CLEANING_UP_TRACKER_FILES]="Cleaning up %b old tracker files"
 MSG_DE[$MSG_CLEANING_UP_TRACKER_FILES]="%b alte Tracker Dateien werden gelöscht"
@@ -176,18 +184,20 @@ MSG_OPTION_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_OPTION_ERROR]="Invalid combination of options"
 MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
 MSG_HELP=$((MSG_CNT++))
-MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
-
+MSG_EN[$MSG_HELP]="
 Usage:
+
+${EXECUTABLE_NAME} -r [-f [FILE]]
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [FILE]]
 ${EXECUTABLE_NAME} -F [FILE]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f [FILE]]
-${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -U
+${EXECUTABLE_NAME} -h
 
+  -r, --run                     Download and enable blacklists
   -d, --disable                 Disable all blacklists
   -e, --enable                  Enable ${EXECUTABLE_NAME} without downloading blacklists
   -f, --filter [FILE]           Enable the filter configured in FILE.
@@ -195,25 +205,27 @@ ${EXECUTABLE_NAME} -U
                                 This option is only valid in combination with -e or -r
   -F, --filter-test [FILE]      Test the configuration of the filter and display lines filtered
   -i, --install                 Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run                     Download and enable blacklists
-  -s, --status                  Show the current status of block-tracker (enabled/disabled)
   -u, --uninstall               Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
                                 and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -s, --status                  Show the current status of block-tracker (enabled/disabled)
   -U, --update                  Upgrade to latest stable release
+  -h, --help                    Display this help text
 
 The complete documentation is available on https://ajacobsen.github.io/block-tracker/."
-MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
-
+MSG_DE[$MSG_HELP]="
 Aufruf:
+
+${EXECUTABLE_NAME} -r [-f [DATEI]]
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [DATEI]]
 ${EXECUTABLE_NAME} -F [DATEI]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f [DATEI]]
-${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -U
+${EXECUTABLE_NAME} -h
 
+  -r, --run                     Lade und aktiviere blacklists werden
   -d, --disable                 Deaktiviere alle blacklists
   -e, --enable                  Aktiviere "${EXECUTABLE_NAME}" ohne blacklists runterzuladen
   -f, --filter [DATEI]          Aktiviere den Filter DATEI, wenn DATEI ausgelassen wird,
@@ -223,11 +235,11 @@ ${EXECUTABLE_NAME} -U
                                 Diese Option ist nur gültig in Kombination mit -e or -r
   -F, --filter-test [DATEI]     Teste die Konfiguration des Filters und liste welche Zeilen gefiltert
   -i, --install                 Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run                     Lade und aktiviere blacklists werden
-  -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -u, --uninstall               Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
                                 und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -U, --update                  Aktualisiere auf neueste stabile Version
+  -h, --help                    Zeige diesen Hilftext an
 
 Die vollständige Dokumentation ist unter https://ajacobsen.github.io/block-tracker/ verfügbar."
 
@@ -258,7 +270,7 @@ function askYesNo() { # messageid message_parameters
 function uninstall() {
     if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -297,7 +309,7 @@ function disable() {
     # Check if /etc/hosts.d and /etc/hosts.d/00-hosts exist
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -308,13 +320,13 @@ function disable() {
 function process_etc() { # resultfile
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
     if [[ $(ls -1 ${ETC_HOSTS_TRACKER_FILTER} | wc -l 2>/dev/null) == "0" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -390,12 +402,6 @@ function filtertest() {
 
 }
 
-function invalid_option() {
-    write_to_console $MSG_OPTION_ERROR
-    write_to_console $MSG_HELP
-    exit 1
-}
-
 function get_latest_version() {
     if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
         ! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
@@ -411,10 +417,6 @@ function get_latest_version() {
     fi
 
     doInstall "${url}"
-}
-
-function help() {
-    write_to_console "${MSG_HELP}"
 }
 
 function get_latest_update { # url
@@ -456,7 +458,7 @@ function downloadTrackerFiles() {
 function execute () {
     if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console $MSG_CALL_HELP
         exit 1
     fi
 
@@ -515,7 +517,7 @@ function status() {
 }
 
 if [[ " $@ " =~ " -h " || " $@ " =~ " --help " ]]; then # if any parameter asks for help
-    help
+    write_to_console "${MSG_HELP}"
     exit 0
 fi
 
@@ -530,6 +532,8 @@ use_filter=false
 basic_cmd_cnt=0
 filter_option_allowed=1
 previous_token=""
+
+write_to_console $MSG_VERSION_INFO
 
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
@@ -590,7 +594,7 @@ if [ $# -gt 0 ]; then
                 shift ;;
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1"
-                help
+                write_to_console $MSG_CALL_HELP
                 exit 1
                 ;;
         esac
@@ -598,16 +602,19 @@ if [ $# -gt 0 ]; then
 fi
 
 if [[ -z "${cmd}" ]]; then
-    help
+    write_to_console "${MSG_HELP}"
     exit 1
 fi
 
 if (( basic_cmd_cnt > 1 )); then
-    invalid_option
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_CALL_HELP
+    exit 1
 fi
 
 if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
-    invalid_option
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_CALL_HELP
 fi
-
+  
 $cmd
