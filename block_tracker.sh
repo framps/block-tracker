@@ -17,7 +17,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # *Credits*
-# I acknowledge and I'm grateful to framps (framp at linux-tips-and-tricks dot de)
+# I acknowledge and I'm grateful to framp (framp at linux-tips-and-tricks dot de)
 # for his contribution to block_tracker.
 
 set -e -o pipefail -o errtrace                          # see https://sipb.mit.edu/doc/safe-shell/
@@ -144,6 +144,9 @@ MSG_DE[$MSG_TRACKER_FILE_UPTODATE]="Datei %b ist aktuell, überspringe"
 # common messages
 
 MSG_CNT=200
+MSG_CALL_HELP=$((MSG_CNT++))
+MSG_EN[$MSG_CALL_HELP]="Use option -h or pass no option to get a list of all commands and options"
+MSG_DE[$MSG_CALL_HELP]="Benutze die Option -h oder keine Option um Details zu den Befehlen und Optionen zu erhalten"
 MSG_UNKNOWN_OPTION=$((MSG_CNT++))
 MSG_EN[$MSG_UNKNOWN_OPTION]="Unknown option %b"
 MSG_DE[$MSG_UNKNOWN_OPTION]="Ungültige Option %b"
@@ -261,7 +264,7 @@ function askYesNo() { # messageid message_parameters
 function uninstall() {
     if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -300,7 +303,7 @@ function disable() {
     # Check if /etc/hosts.d and /etc/hosts.d/00-hosts exist
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -311,13 +314,13 @@ function disable() {
 function process_etc() { # resultfile
     if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
     if [[ $(ls -1 ${ETC_HOSTS_TRACKER_FILTER} | wc -l 2>/dev/null) == "0" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -391,12 +394,6 @@ function filtertest() {
         exit 1
     fi
 
-}
-
-function invalid_option() {
-    write_to_console $MSG_OPTION_ERROR
-    write_to_console $MSG_HELP
-    exit 1
 }
 
 function get_latest_version() {
@@ -595,7 +592,7 @@ if [ $# -gt 0 ]; then
                 shift ;;
             *)
                 write_to_console $MSG_UNKNOWN_OPTION "$1"
-                help
+                write_to_console $MSG_CALL_HELP
                 exit 1
                 ;;
         esac
@@ -608,11 +605,14 @@ if [[ -z "${cmd}" ]]; then
 fi
 
 if (( basic_cmd_cnt > 1 )); then
-    invalid_option
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_CALL_HELP
+    exit 1
 fi
 
 if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
-    invalid_option
+    write_to_console $MSG_OPTION_ERROR
+    write_to_console $MSG_CALL_HELP
 fi
   
 $cmd
