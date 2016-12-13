@@ -22,7 +22,7 @@
 
 set -e -o pipefail -o errtrace                          # see https://sipb.mit.edu/doc/safe-shell/
 
-VERSION="v0.0.4"
+VERSION="v0.0.4 alpha"
 RELEASED=false
 
 # various constants
@@ -616,5 +616,5 @@ if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
     write_to_console $MSG_OPTION_ERROR
     write_to_console $MSG_CALL_HELP
 fi
-  
+
 $cmd
