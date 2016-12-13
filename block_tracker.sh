@@ -186,15 +186,18 @@ MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
 MSG_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_HELP]="
 Usage:
+
+${EXECUTABLE_NAME} -r [-f [FILE]]
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [FILE]]
 ${EXECUTABLE_NAME} -F [FILE]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f [FILE]]
-${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -U
+${EXECUTABLE_NAME} -h
 
+  -r, --run                     Download and enable blacklists
   -d, --disable                 Disable all blacklists
   -e, --enable                  Enable ${EXECUTABLE_NAME} without downloading blacklists
   -f, --filter [FILE]           Enable the filter configured in FILE.
@@ -202,24 +205,27 @@ ${EXECUTABLE_NAME} -U
                                 This option is only valid in combination with -e or -r
   -F, --filter-test [FILE]      Test the configuration of the filter and display lines filtered
   -i, --install                 Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run                     Download and enable blacklists
-  -s, --status                  Show the current status of block-tracker (enabled/disabled)
   -u, --uninstall               Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
                                 and disable ${EXECUTABLE_NAME} (See -d|--disable)
+  -s, --status                  Show the current status of block-tracker (enabled/disabled)
   -U, --update                  Upgrade to latest stable release
+  -h, --help                    Display this help text
 
 The complete documentation is available on https://ajacobsen.github.io/block-tracker/."
 MSG_DE[$MSG_HELP]="
 Aufruf:
+
+${EXECUTABLE_NAME} -r [-f [DATEI]]
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [DATEI]]
 ${EXECUTABLE_NAME} -F [DATEI]
 ${EXECUTABLE_NAME} -i
-${EXECUTABLE_NAME} -r [-f [DATEI]]
-${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -u
+${EXECUTABLE_NAME} -s
 ${EXECUTABLE_NAME} -U
+${EXECUTABLE_NAME} -h
 
+  -r, --run                     Lade und aktiviere blacklists werden
   -d, --disable                 Deaktiviere alle blacklists
   -e, --enable                  Aktiviere "${EXECUTABLE_NAME}" ohne blacklists runterzuladen
   -f, --filter [DATEI]          Aktiviere den Filter DATEI, wenn DATEI ausgelassen wird,
@@ -229,11 +235,11 @@ ${EXECUTABLE_NAME} -U
                                 Diese Option ist nur gültig in Kombination mit -e or -r
   -F, --filter-test [DATEI]     Teste die Konfiguration des Filters und liste welche Zeilen gefiltert
   -i, --install                 Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -r, --run                     Lade und aktiviere blacklists werden
-  -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -u, --uninstall               Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
                                 und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
+  -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -U, --update                  Aktualisiere auf neueste stabile Version
+  -h, --help                    Zeige diesen Hilftext an
 
 Die vollständige Dokumentation ist unter https://ajacobsen.github.io/block-tracker/ verfügbar."
 
