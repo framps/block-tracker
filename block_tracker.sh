@@ -147,9 +147,12 @@ MSG_CNT=200
 MSG_UNKNOWN_OPTION=$((MSG_CNT++))
 MSG_EN[$MSG_UNKNOWN_OPTION]="Unknown option %b"
 MSG_DE[$MSG_UNKNOWN_OPTION]="Ungültige Option %b"
+MSG_VERSION_INFO=$((MSG_CNT++))
+MSG_EN[$MSG_VERSION_INFO]="$EXECUTABLE_NAME - $VERSION"
+MSG_DE[$MSG_VERSION_INFO]="$EXECUTABLE_NAME - $VERSION"
 MSG_UNEXPECTED_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_UNEXPECTED_ERROR]="Unexpected error occured in version %b. Please report following stacktrace on ${GITHUB_ISSUES_URL}"
-MSG_DE[$MSG_UNEXPECTED_ERROR]="Ein nicht erwarteter Fehler trat in version %b auf. Bitte berichte diesen Stacktrace auf ${GITHUB_ISSUES_URL}"
+MSG_DE[$MSG_UNEXPECTED_ERROR]="Ein nicht erwarteter Fehler trat in Version %b auf. Bitte berichte diesen Stacktrace auf ${GITHUB_ISSUES_URL}"
 MSG_CLEANING_UP_TRACKER_FILES=$((MSG_CNT++))
 MSG_EN[$MSG_CLEANING_UP_TRACKER_FILES]="Cleaning up %b old tracker files"
 MSG_DE[$MSG_CLEANING_UP_TRACKER_FILES]="%b alte Tracker Dateien werden gelöscht"
@@ -178,8 +181,7 @@ MSG_OPTION_ERROR=$((MSG_CNT++))
 MSG_EN[$MSG_OPTION_ERROR]="Invalid combination of options"
 MSG_DE[$MSG_OPTION_ERROR]="Ungültige Optionskombination"
 MSG_HELP=$((MSG_CNT++))
-MSG_EN[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
-
+MSG_EN[$MSG_HELP]="
 Usage:
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [FILE]]
@@ -204,8 +206,7 @@ ${EXECUTABLE_NAME} -U
   -U, --update                  Upgrade to latest stable release
 
 The complete documentation is available on https://ajacobsen.github.io/block-tracker/."
-MSG_DE[$MSG_HELP]="${EXECUTABLE_NAME}, Version ${VERSION}
-
+MSG_DE[$MSG_HELP]="
 Aufruf:
 ${EXECUTABLE_NAME} -d
 ${EXECUTABLE_NAME} -e [-f [DATEI]]
@@ -533,6 +534,8 @@ basic_cmd_cnt=0
 filter_option_allowed=1
 previous_token=""
 
+write_to_console $MSG_VERSION_INFO
+
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
         case "$1" in
@@ -611,5 +614,5 @@ fi
 if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
     invalid_option
 fi
-
+  
 $cmd
