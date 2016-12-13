@@ -419,10 +419,6 @@ function get_latest_version() {
     doInstall "${url}"
 }
 
-function help() {
-    write_to_console "${MSG_HELP}"
-}
-
 function get_latest_update { # url
     local last_update
 
@@ -462,7 +458,7 @@ function downloadTrackerFiles() {
 function execute () {
     if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        help
+        write_to_console $MSG_CALL_HELP
         exit 1
     fi
 
@@ -521,7 +517,7 @@ function status() {
 }
 
 if [[ " $@ " =~ " -h " || " $@ " =~ " --help " ]]; then # if any parameter asks for help
-    help
+    write_to_console "${MSG_HELP}"
     exit 0
 fi
 
@@ -606,7 +602,7 @@ if [ $# -gt 0 ]; then
 fi
 
 if [[ -z "${cmd}" ]]; then
-    help
+    write_to_console "${MSG_HELP}"
     exit 1
 fi
 
