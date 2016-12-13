@@ -330,6 +330,15 @@ function process_etc() { # resultfile
         exit 1
     fi
 
+    # delete files older than one year
+    local time_diff
+    for f in ${ETC_HOSTS_TRACKER_FILTER}; do
+        time_diff=$(( $(date '+%s') - $(stat -c %Z ${f}) ))
+        if [[ ${time_diff} > 31536000 ]]; then
+            echo "${f} is older than 1 year, deleting"
+            rm "${f}"
+        fi
+    done
 
     local result_file="$1"
 
