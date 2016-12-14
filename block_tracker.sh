@@ -334,7 +334,8 @@ function process_etc() { # resultfile
     local time_diff
     for f in ${ETC_HOSTS_TRACKER_FILTER}; do
         time_diff=$(( $(date '+%s') - $(stat -c %Z ${f}) ))
-        if [[ ${time_diff} > 31536000 ]]; then
+        echo ${time_diff}
+        if (( ${time_diff} > 31536000 )); then
             echo "${f} is older than 1 year, deleting"
             rm "${f}"
         fi
