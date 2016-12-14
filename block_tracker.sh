@@ -41,15 +41,15 @@ ETC_HOSTS="/etc/hosts"
 
 # various dependent constants
 
-GIT_REPO_URL="https://$GITHUB_URL/$GITHUB_REPO"
-GITHUB_ISSUES_URL="https://$GITHUB_URL/$GITHUB_REPO/issues"
+GIT_REPO_URL="https://${GITHUB_URL}/${GITHUB_REPO}"
+GITHUB_ISSUES_URL="https://${GITHUB_URL}/${GITHUB_REPO}/issues"
 GITHUB_LATEST_RELEASE_URL="https://api.${GITHUB_URL}/repos/${GITHUB_REPO}/releases/latest"
 GITHUB_TRACKER_URLs="${EXECUTABLE_NAME}.urls"
-GITHUB_TRACKER_URLs_DOWNLOAD_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${GITHUB_TRACKER_URLs}"
+GITHUB_TRACKER_URLs_DOWNLOAD_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${GITHUB_BRANCH}/${GITHUB_TRACKER_URLs}"
 if [ ${RELEASED} == true ]; then
-    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${VERSION}/${INSTALL_NAME}.sh"
+    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${VERSION}/${INSTALL_NAME}.sh"
 else
-    GIT_INSTALL_URL="https://$GITHUB_RAW_URL/$GITHUB_REPO/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
+    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
 fi
 
 FILTER_CONFIG_FILE="/etc/${EXECUTABLE_NAME}.filter"
@@ -252,7 +252,7 @@ function abort() {
 
 function askYesNo() { # messageid message_parameters
     local response
-    local yesno=$(get_message "$MSG_YES_NO")
+    local yesno=$(get_message "${MSG_YES_NO}")
     ask_from_console "$1" "${@:2}" "${yesno}"
     yesno=${yesno,,}
     local yes="${yesno:0:1}"
@@ -417,7 +417,7 @@ function get_latest_version() {
         ! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
         write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
         write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
-        local url="https://$GITHUB_RAW_URL/$GITHUB_REPO/${latest_version}/${INSTALL_NAME}.sh"
+        local url="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${latest_version}/${INSTALL_NAME}.sh"
         ! if ! askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"; then
             exit 0
         fi
@@ -449,11 +449,11 @@ function downloadTrackerFiles() {
     fi
 
     while IFS=$'\t' read -r name url regex; do
-        [[ $name =~ ^# ]] && continue # skip comments
-        write_to_console "${MSG_PROCESSING_URL}" "$url"
+        [[ "${name}" =~ ^# ]] && continue # skip comments
+        write_to_console "${MSG_PROCESSING_URL}" "${url}"
         if [[ ! -f ${ETC_HOSTS_D_DIR}/${name} || $(get_latest_update "${url}") > $(stat -c %Z ${ETC_HOSTS_D_DIR}/${name}) ]]; then
-            if ! wget -qO "${tmpfile}" "$url"; then
-                write_to_console "${MSG_DOWNLOAD_FAILED}" "$url"
+            if ! wget -qO "${tmpfile}" "${url}"; then
+                write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"
                 abort
             fi
             printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${name}"
@@ -468,7 +468,7 @@ function downloadTrackerFiles() {
 function execute () {
     if [[ ! -d "${ETC_HOSTS_D_DIR}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
-        write_to_console $MSG_CALL_HELP
+        write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
@@ -485,11 +485,11 @@ function get_message() { #messagenumber
     if [ -z "${msg}" ]; then
         msg="${MSG_EN[$msgn]}"
     fi
-    echo "$msg"
+    echo "${msg}"
 }
 
 function handleErrorTrap() {
-    write_to_console "${MSG_UNEXPECTED_ERROR}" "$VERSION"
+    write_to_console "${MSG_UNEXPECTED_ERROR}" "${VERSION}"
     logStack
 }
 
@@ -505,16 +505,16 @@ function logStack () {
 function write_to_console() { #messagenumber parm1 ... parmn
     local msgv msg msgn
     msgn=$1
-    msg=$(get_message "$msgn")
-    [ -z "${msg}" ] && msg=$(get_message "$MSG_UNDEFINED")
+    msg=$(get_message "${msgn}")
+    [ -z "${msg}" ] && msg=$(get_message "${MSG_UNDEFINED}")
     printf "${msg}\n" "${@:2}"
 }
 
 function ask_from_console() { #messagenumber parm1 ... parmn
     local msgv msg msgn
     msgn=$1
-    msg=$(get_message "$msgn")
-    [ -z "${msg}" ] && msg=$(get_message "$MSG_UNDEFINED")
+    msg=$(get_message "${msgn}")
+    [ -z "${msg}" ] && msg=$(get_message "${MSG_UNDEFINED}")
     printf "${msg}" "${@:2}"
 }
 
@@ -543,7 +543,7 @@ basic_cmd_cnt=0
 filter_option_allowed=1
 previous_token=""
 
-write_to_console $MSG_VERSION_INFO
+write_to_console "${MSG_VERSION_INFO}"
 
 if [ $# -gt 0 ]; then
     while [[ -n "$1" ]]; do
@@ -603,8 +603,8 @@ if [ $# -gt 0 ]; then
                 fi
                 shift ;;
             *)
-                write_to_console $MSG_UNKNOWN_OPTION "$1"
-                write_to_console $MSG_CALL_HELP
+                write_to_console "${MSG_UNKNOWN_OPTION}" "$1"
+                write_to_console "${MSG_CALL_HELP}"
                 exit 1
                 ;;
         esac
@@ -617,14 +617,14 @@ if [[ -z "${cmd}" ]]; then
 fi
 
 if (( basic_cmd_cnt > 1 )); then
-    write_to_console $MSG_OPTION_ERROR
-    write_to_console $MSG_CALL_HELP
+    write_to_console "${MSG_OPTION_ERROR}"
+    write_to_console "${MSG_CALL_HELP}"
     exit 1
 fi
 
 if (( ! filter_option_allowed )) &&  [ $use_filter == true ]; then
-    write_to_console $MSG_OPTION_ERROR
-    write_to_console $MSG_CALL_HELP
+    write_to_console "${MSG_OPTION_ERROR}"
+    write_to_console "${MSG_CALL_HELP}"
 fi
 
 $cmd
