@@ -103,6 +103,9 @@ MSG_DE[$MSG_CURRENT_VERSION]="Installierte Version von %b: %b"
 MSG_LATEST_VERSION=$((MSG_CNT++))
 MSG_EN[$MSG_LATEST_VERSION]="%b latest stable version: %b"
 MSG_DE[$MSG_LATEST_VERSION]="Neueste stabile Version von %b: %b"
+MSG_TRACKER_FILE_OUTOFDATE=$((MSG_CNT++))
+MSG_EN[$MSG_TRACKER_FILE_OUTOFDATE]="%b is older than 1 year, deleting"
+MSG_DE[$MSG_TRACKER_FILE_OUTOFDATE]="%b ist älter als ein Jahr, lösche"
 
 # Messages for installer
 
@@ -334,9 +337,8 @@ function process_etc() { # resultfile
     local time_diff
     for f in ${ETC_HOSTS_TRACKER_FILTER}; do
         time_diff=$(( $(date '+%s') - $(stat -c %Z ${f}) ))
-        echo ${time_diff}
         if (( ${time_diff} > 31536000 )); then
-            echo "${f} is older than 1 year, deleting"
+            write_to_console "${MSG_TRACKER_FILE_OUTOFDATE}" "${f}"
             rm "${f}"
         fi
     done
