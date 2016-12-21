@@ -144,6 +144,9 @@ MSG_DE[$MSG_TRACKER_FILE_UPTODATE]="Datei %b ist aktuell, überspringe"
 # common messages
 
 MSG_CNT=200
+MSG_CONFIRM_SUDO=$((MSG_CNT++))
+MSG_EN[$MSG_CONFIRM_SUDO]="Use sudo to invoke ${EXECUTABLE_NAME}? [%b] "
+MSG_DE[$MSG_CONFIRM_SUDO]="Soll sudo benutzt werden um ${EXECUTABLE_NAME} aufzurufen? [%b]"
 MSG_CALL_HELP=$((MSG_CNT++))
 MSG_EN[$MSG_CALL_HELP]="Use option -h or pass no option to get a list of all commands and options"
 MSG_DE[$MSG_CALL_HELP]="Benutze die Option -h oder keine Option um Details zu den Befehlen und Optionen zu erhalten"
@@ -533,6 +536,12 @@ fi
 
 if [ $UID -ne 0 ]; then
     write_to_console "${MSG_NOT_ROOT}"
+    ! if ! askYesNo "${MSG_CONFIRM_SUDO}"; then
+        exit 1
+    else
+		sudo $EXECUTABLE_NAME "$*"
+    fi
+
     exit 1
 fi
 
