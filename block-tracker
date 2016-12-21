@@ -28,8 +28,7 @@ RELEASED=false
 # various constants
 
 INSTALL_PATH="/usr/local/bin"
-INSTALL_NAME="block_tracker"
-EXECUTABLE_NAME=${INSTALL_NAME/_/-}                     # executable has hypen instead of underscore !!!
+EXECUTABLE_NAME="block-tracker"                     # executable has hypen instead of underscore !!!
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_BRANCH="master"
@@ -47,9 +46,9 @@ GITHUB_LATEST_RELEASE_URL="https://api.${GITHUB_URL}/repos/${GITHUB_REPO}/releas
 GITHUB_TRACKER_URLs="${EXECUTABLE_NAME}.urls"
 GITHUB_TRACKER_URLs_DOWNLOAD_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${GITHUB_BRANCH}/${GITHUB_TRACKER_URLs}"
 if [ ${RELEASED} == true ]; then
-    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${VERSION}/${INSTALL_NAME}.sh"
+    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${VERSION}/${EXECUTABLE_NAME}"
 else
-    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${GITHUB_BRANCH}/${INSTALL_NAME}.sh"
+    GIT_INSTALL_URL="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${GITHUB_BRANCH}/${EXECUTABLE_NAME}"
 fi
 
 FILTER_CONFIG_FILE="/etc/${EXECUTABLE_NAME}.filter"
@@ -422,7 +421,7 @@ function get_latest_version() {
         ! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
         write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
         write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
-        local url="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${latest_version}/${INSTALL_NAME}.sh"
+        local url="https://${GITHUB_RAW_URL}/${GITHUB_REPO}/${latest_version}/${EXECUTABLE_NAME}"
         ! if ! askYesNo "${MSG_UPGRADE}" "${EXECUTABLE_NAME}" "${latest_version}"; then
             exit 0
         fi
