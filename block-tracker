@@ -103,8 +103,8 @@ MSG_LATEST_VERSION=$((MSG_CNT++))
 MSG_EN[$MSG_LATEST_VERSION]="%b latest stable version: %b"
 MSG_DE[$MSG_LATEST_VERSION]="Neueste stabile Version von %b: %b"
 MSG_TRACKER_FILE_OUTOFDATE=$((MSG_CNT++))
-MSG_EN[$MSG_TRACKER_FILE_OUTOFDATE]="%b is older than 1 year, deleting"
-MSG_DE[$MSG_TRACKER_FILE_OUTOFDATE]="%b ist älter als ein Jahr, lösche"
+MSG_EN[$MSG_TRACKER_FILE_OUTOFDATE]="%b is no longer supported, deleting"
+MSG_DE[$MSG_TRACKER_FILE_OUTOFDATE]="%b wird nicht mehr unterstützt, lösche"
 
 # Messages for installer
 
@@ -335,16 +335,6 @@ function process_etc() { # resultfile
         exit 1
     fi
 
-    # delete files older than one year
-    local time_diff
-    for f in ${ETC_HOSTS_TRACKER_FILTER}; do
-        time_diff=$(( $(date '+%s') - $(stat -c %Z ${f}) ))
-        if (( ${time_diff} > 31536000 )); then
-            write_to_console "${MSG_TRACKER_FILE_OUTOFDATE}" "${f}"
-            rm "${f}"
-        fi
-    done
-
     local result_file="$1"
 
     # Insert comment
@@ -433,14 +423,6 @@ function get_latest_version() {
     doInstall "${url}"
 }
 
-function get_latest_update { # url
-    local last_update
-
-    last_update=$(curl -sI "${1}" |sed -n 's/Last-Modified: //p')
-    last_update=$(date '+%s' -d "${last_update}")
-    echo ${last_update}
-}
-
 function downloadTrackerFiles() {
     local name url regex
     local urlfile=$(mktemp)
@@ -452,21 +434,29 @@ function downloadTrackerFiles() {
         abort
     fi
 
+    local i=0
+    local filelist
+    # declare -A filelist
     while IFS=$'\t' read -r name url regex; do
         [[ "${name}" =~ ^# ]] && continue # skip comments
+        filelist[i]="${name}"
+        i+=1
         write_to_console "${MSG_PROCESSING_URL}" "${url}"
-        if [[ ! -f ${ETC_HOSTS_D_DIR}/${name} || $(get_latest_update "${url}") > $(stat -c %Z ${ETC_HOSTS_D_DIR}/${name}) ]]; then
-            if ! wget -qO "${tmpfile}" "${url}"; then
-                write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"
-                abort
-            fi
-            printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${name}"
-        else
-            write_to_console "${MSG_TRACKER_FILE_UPTODATE}" "${name}"
+        if ! wget -qO "${tmpfile}" "${url}"; then
+            write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"
+            abort
         fi
+        printf "%b" "${regex}" | sed -f - ${tmpfile} > "${ETC_HOSTS_D_DIR}/${name}"
     done < ${urlfile}
     rm ${urlfile}
     rm ${tmpfile}
+    for f in ${ETC_HOSTS_TRACKER_FILTER}; do
+        if [[ ! " ${filelist[@]} " =~ " $(basename ${f}) " ]]; then
+            echo "Delete: ${f}"
+            write_to_console "${MSG_TRACKER_FILE_OUTOFDATE}" "${f}"
+            rm "${f}"
+        fi
+    done
 }
 
 function execute () {
