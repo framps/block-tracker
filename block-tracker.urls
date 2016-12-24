@@ -3,7 +3,7 @@
 #
 # Format: NAME<TAB>URL<TAB>REGEX
 #
-10-mvpblocklist	http://winhelp2002.mvps.org/hosts.txt	s/\r// \n /^0/!d \n s/#.*$//
-20-some1whocaresblocklist	http://someonewhocares.org/hosts/zero/hosts	/^0/!d \n s/#.*$//
-30-sysctlblocklist	http://sysctl.org/cameleon/hosts	/^127.0.0.1.*localhost$/d \n s/^127.0.0.1/0.0.0.0/ \n s/[\t]//g \n /^0/!d
-40-yoyo.orgblocklist	http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext	/^0/!d
+bt-winhelp2002.mvps.org.hosts	http://winhelp2002.mvps.org/hosts.txt	s/\r// \n /^0/!d \n s/#.*$//
+bt-someonewhocares.org.hosts	http://someonewhocares.org/hosts/zero/hosts	/^0/!d \n s/#.*$//
+bt-sysctl.org.hosts	http://sysctl.org/cameleon/hosts	/^127.0.0.1.*localhost$/d \n s/^127.0.0.1/0.0.0.0/ \n s/[\t]//g \n /^0/!d
+bt-pgl.yoyo.org.hosts	http://pgl.yoyo.org/as/serverlist.php?hostformat=hosts&useip=0.0.0.0&mimetype=plaintext	/^0/!d
