@@ -2,7 +2,7 @@
 
 <a name="english"></a>
 ## English
-This script blocks advertisements by extending the /etc/hosts to block specific websites.
+This script blocks advertisements by extending /etc/hosts to block specific websites.
 
 Execute following command to install block-tracker.
 ```
