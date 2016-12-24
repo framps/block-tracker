@@ -26,16 +26,17 @@ VERSION="v0.0.4 alpha"
 RELEASED=false
 
 # various constants
-
-INSTALL_PATH="/usr/local/bin"
 EXECUTABLE_NAME="block-tracker"                     # executable has hypen instead of underscore !!!
+PREFIX="/usr/local"
+PREFIX_BIN="${PREFIX}/bin"
+PREFIX_ETC="${PREFIX}/etc/${EXECUTABLE_NAME}"
 GITHUB_URL="github.com"
 GITHUB_RAW_URL="raw.githubusercontent.com"
 GITHUB_BRANCH="master"
 GITHUB_REPO_OWNER="${GITHUB_REPO_OWNER:-ajacobsen}"
 GITHUB_REPO="${GITHUB_REPO_OWNER}/${EXECUTABLE_NAME}"
 
-ETC_HOSTS_D_DIR="/etc/hosts.d"
+ETC_HOSTS_D_DIR="${PREFIX_ETC}/hosts"
 ETC_HOSTS="/etc/hosts"
 
 # various dependent constants
@@ -209,8 +210,8 @@ ${EXECUTABLE_NAME} -h
                                 If FILE is omitted it defaults to ${FILTER_CONFIG_FILE}
                                 This option is only valid in combination with -e or -r
   -F, --filter-test [FILE]      Test the configuration of the filter and display lines filtered
-  -i, --install                 Install block-tracker to ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -u, --uninstall               Delete ${INSTALL_PATH}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
+  -i, --install                 Install block-tracker to ${PREFIX_BIN}/${EXECUTABLE_NAME}
+  -u, --uninstall               Delete ${PREFIX_BIN}/${EXECUTABLE_NAME} and ${ETC_HOSTS_D_DIR}
                                 and disable ${EXECUTABLE_NAME} (See -d|--disable)
   -s, --status                  Show the current status of block-tracker (enabled/disabled)
   -U, --update                  Upgrade to latest stable release
@@ -239,8 +240,8 @@ ${EXECUTABLE_NAME} -h
                                 angegeben werden.
                                 Diese Option ist nur gültig in Kombination mit -e or -r
   -F, --filter-test [DATEI]     Teste die Konfiguration des Filters und liste welche Zeilen gefiltert
-  -i, --install                 Installiere block-tracker nach ${INSTALL_PATH}/${EXECUTABLE_NAME}
-  -u, --uninstall               Lösche ${INSTALL_PATH}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
+  -i, --install                 Installiere block-tracker nach ${PREFIX_BIN}/${EXECUTABLE_NAME}
+  -u, --uninstall               Lösche ${PREFIX_BIN}/${EXECUTABLE_NAME} und ${ETC_HOSTS_D_DIR}
                                 und deaktiviere ${EXECUTABLE_NAME} (Siehe -d|--disable)
   -s, --status                  Zeige den aktuellen Status von ${EXECUTABLE_NAME} (aktiviert/deaktiviert)
   -U, --update                  Aktualisiere auf neueste stabile Version
@@ -273,7 +274,7 @@ function askYesNo() { # messageid message_parameters
 }
 
 function uninstall() {
-    if [[ ! -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+    if [[ ! -f "${PREFIX_BIN}/${EXECUTABLE_NAME}" ]]; then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         write_to_console "${MSG_CALL_HELP}"
         exit 1
@@ -284,14 +285,14 @@ function uninstall() {
     fi
 
     write_to_console "${MSG_PROCESSING_UNINSTALL}" "${EXECUTABLE_NAME}"
-    cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
-    rm -r ${ETC_HOSTS_D_DIR}
-    rm "${INSTALL_PATH}/${EXECUTABLE_NAME}"
-    write_to_console "${MSG_UNINSTALL_SUCCESS}" "${INSTALL_PATH}/${EXECUTABLE_NAME}"
+    cp ${ETC_HOSTS_D_DIR}/system.hosts ${ETC_HOSTS}
+    rm -r ${PREFIX_ETC}
+    rm "${PREFIX_BIN}/${EXECUTABLE_NAME}"
+    write_to_console "${MSG_UNINSTALL_SUCCESS}" "${PREFIX_BIN}/${EXECUTABLE_NAME}"
 }
 
 function install() {
-    if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+    if [[ -f "${PREFIX_BIN}/${EXECUTABLE_NAME}" ]]; then
         ! if ! askYesNo "${MSG_REINSTALL}" "${EXECUTABLE_NAME}"; then
             exit 0
         fi
@@ -303,27 +304,27 @@ function install() {
 function doInstall() { # install_url
     local url="${1}"
     write_to_console "${MSG_PROCESSING_INSTALL}" "${EXECUTABLE_NAME}"
-    mkdir ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/00-hosts
-    wget -qO "${INSTALL_PATH}/${EXECUTABLE_NAME}" "${url}" || \
+    mkdir -p ${ETC_HOSTS_D_DIR} 2>/dev/null && cp ${ETC_HOSTS} ${ETC_HOSTS_D_DIR}/system.hosts
+    wget -qO "${PREFIX_BIN}/${EXECUTABLE_NAME}" "${url}" || \
         ( write_to_console "${MSG_DOWNLOAD_FAILED}" "${url}"; abort )
-    chmod +x "${INSTALL_PATH}/${EXECUTABLE_NAME}"
-    write_to_console "${MSG_INSTALL_SUCCESS}" "${EXECUTABLE_NAME}" "${INSTALL_PATH}"
+    chmod +x "${PREFIX_BIN}/${EXECUTABLE_NAME}"
+    write_to_console "${MSG_INSTALL_SUCCESS}" "${EXECUTABLE_NAME}" "${PREFIX_BIN}"
 }
 
 function disable() {
-    # Check if /etc/hosts.d and /etc/hosts.d/00-hosts exist
-    if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
+    # Check if /usr/local/etc/block-tracker/hosts and /usr/local/etc/block-tracker/hosts/system.hosts exist
+    if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/system.hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         write_to_console "${MSG_CALL_HELP}"
         exit 1
     fi
 
-    cp ${ETC_HOSTS_D_DIR}/00-hosts ${ETC_HOSTS}
+    cp ${ETC_HOSTS_D_DIR}/system.hosts ${ETC_HOSTS}
     write_to_console "${MSG_DISABLED_SUCCESS}" "${EXECUTABLE_NAME}"
 }
 
 function process_etc() { # resultfile
-    if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/00-hosts ]); then
+    if ([ ! -d ${ETC_HOSTS_D_DIR} ] || [ ! -f ${ETC_HOSTS_D_DIR}/system.hosts ]); then
         write_to_console "${MSG_NOT_INSTALLED}" "${EXECUTABLE_NAME}"
         write_to_console "${MSG_CALL_HELP}"
         exit 1
@@ -342,7 +343,7 @@ function process_etc() { # resultfile
     # Remove comments
     # Remove leading and trailing spaces
     # Eliminate duplicates
-    printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in /etc/hosts.d/\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/00-hosts you should make any changes there\n" > ${result_file}
+    printf "# DO NOT EDIT THIS FILE\\n# It is automaticly generated by block-tracker from the files in ${ETC_HOSTS_D_DIR}\\n# Your original hosts file can be found at ${ETC_HOSTS_D_DIR}/system.hosts you should make any changes there\n" > ${result_file}
     cat ${ETC_HOSTS_D_DIR}/* | sed -e '/^#.*$/d' -e 's/^\s\+//g' -e 's/\s\+$//g'| sort -u >> ${result_file}
 }
 
@@ -407,7 +408,7 @@ function filtertest() {
 }
 
 function get_latest_version() {
-    if [[ -f "${INSTALL_PATH}/${EXECUTABLE_NAME}" ]]; then
+    if [[ -f "${PREFIX_BIN}/${EXECUTABLE_NAME}" ]]; then
         ! local latest_version=$(curl -s ${GITHUB_LATEST_RELEASE_URL} | grep 'tag_name' | cut -f 2 -d ':' | sed 's/[", ]//g')
         write_to_console "${MSG_CURRENT_VERSION}" "${EXECUTABLE_NAME}" "${VERSION}"
         write_to_console "${MSG_LATEST_VERSION}" "${EXECUTABLE_NAME}" "${latest_version}"
@@ -436,7 +437,6 @@ function downloadTrackerFiles() {
 
     local i=0
     local filelist
-    # declare -A filelist
     while IFS=$'\t' read -r name url regex; do
         [[ "${name}" =~ ^# ]] && continue # skip comments
         filelist[i]="${name}"
@@ -452,7 +452,6 @@ function downloadTrackerFiles() {
     rm ${tmpfile}
     for f in ${ETC_HOSTS_TRACKER_FILTER}; do
         if [[ ! " ${filelist[@]} " =~ " $(basename ${f}) " ]]; then
-            echo "Delete: ${f}"
             write_to_console "${MSG_TRACKER_FILE_OUTOFDATE}" "${f}"
             rm "${f}"
         fi
