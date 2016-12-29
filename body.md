@@ -1,6 +1,5 @@
-* <a href="#german">README in German</a>
+* <a href="#user-content-german">README in German</a>
 
-<a name="english"></a>
 ## English
 This script blocks advertisements by extending /etc/hosts to block specific websites.
 
@@ -68,7 +67,6 @@ Configuration and Usage of the domain filter (opition --filter and --filter-test
 
 ---
 
-<a name="german"></a>
 ## German
 Dieses Script blockt mittels hosts Dateien u.a. Werbung.
 
