@@ -123,7 +123,7 @@ sudo block-tracker --update
 
 Konfiguration und Benutzung des Domain-Filter (--filter and --filter-test):
 
-*TODO: dokumentieree -f/-F*
+*TODO: dokumentiere -f/-F*
 
 `block-tracker` benutzt diese Listen:
 * http://someonewhocares.org/hosts/
