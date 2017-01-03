@@ -7,26 +7,25 @@ Execute following command to install block-tracker.
 ```
 wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.3/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
-This will create `/etc/hosts.d/` directory and
-copies `/etc/hosts` to `/etc/hosts.d/00-hosts`.
+This will create `/usr/local/etc/block-tracker/hosts/` directory and
+copies `/etc/hosts` to `/usr/local/etc/block-tracker/hosts/system.hosts`.
 
-*Note*: `block-tracker` will concatenate all files from `/etc/hosts.d/` into one file `/etc/hosts`
+*Note*: `block-tracker` will concatenate \*.hosts files from `/usr/local/etc/block-tracker/hosts/` into one file `/etc/hosts`
 which causes `/etc/hosts` to be overwritten every time when `block-tacker` is invoked.
-To add additional local entries which will not be overwritten you have to add them in `/etc/hosts.d/00-hosts`
-or you create an addional file called `/etc/hosts.d/01-myhost`
-Leading numbers (00, 01, ..) define the sequence the files will be concatenated.
+To add additional local entries which will not be overwritten you have to add them in `/usr/local/etc/block-tracker/hosts/system.hosts`
+or you create an addional file called, e.g. `/usr/local/etc/block-tracker/hosts/name.hosts`
 
 To uninstall `block-tracker` just invoke
 ```
 sudo block-tracker --uninstall
 ```
-During uninstall `/etc/hosts.d/00-hosts` will be copied to `/etc/hosts` and directory `/etc/hosts.d/` and file `/usr/local/bin/block-tracker` will be deleted.
+During uninstall `/usr/local/etc/block-tracker/hosts/system.hosts` will be copied to `/etc/hosts` and directory `/usr/local/etc/block-tracker/` and file `/usr/local/bin/block-tracker` will be deleted.
 
 After installation you have to invoke
 ```
 sudo block-tracker --run
 ```
-at least once. This will download the lists with bad domains (blocklists), save them to `/etc/hosts.d/` and enable blocking of all those domains.
+at least once. This will download the lists with bad domains (blocklists), save them to `/usr/local/etc/block-tracker/hosts/` and enable blocking of all those domains.
 
 To temporarily disable `block-tracker` invoke
 ```
@@ -74,26 +73,25 @@ Zum Installieren, einfach folgenden Befehl ausführen:
 ```
 wget -O block-tracker-setup.sh https://raw.githubusercontent.com/ajacobsen/block-tracker/v0.0.2/block_tracker.sh && sudo bash block-tracker-setup.sh --install && rm block-tracker-setup.sh
 ```
-Das erstellt den Ordner `/etc/hosts.d/` und kopiert die Datei `/etc/hosts` nach `/etc/hosts.d/00-hosts`
+Das erstellt den Ordner `/usr/local/etc/block-tracker/hosts/` und kopiert die Datei `/etc/hosts` nach `/usr/local/etc/block-tracker/hosts/system.hosts`
 
-*Hinweis:* `block-tracker` fügt dann alle Dateien in `/etc/hosts.d/` zu einer `/etc/hosts`
+*Hinweis:* `block-tracker` fügt dann alle \*.hosts Dateien in `/usr/local/etc/block-tracker/hosts/` zu einer `/etc/hosts`
 zusammen und dadurch wird die Datei `/etc/hosts` bei jedem Aufruf überschrieben.
-Um eigene Einträge aufzunehmen die nicht überschrieben werden, müssen diese entweder in `/etc/hosts.d/00-hosts`
+Um eigene Einträge aufzunehmen die nicht überschrieben werden, müssen diese entweder in `/usr/local/etc/block-tracker/hosts/system.hosts`
 eingetragen werden oder man erstellt eine weitere Datei und macht
-dort die gewünschten Einträge. Z.B. `/etc/hosts.d/01-meinedatei`
-Durch die führenden Zahlen (00, 01, ..) wird bestimmt in welcher Reihenfolge die Dateien zusammengesetzt werden.
+dort die gewünschten Einträge. z.B. `/usr/local/etc/block-tracker/hosts/name.hosts`
 
 Möchte man das Skript wieder deinstallieren, genügt dieser Befehl:
 ```
 sudo block-tracker --uninstall
 ```
-Dabei wird die Datei `/etc/hosts.d/00-hosts` wieder nach `/etc/hosts` kopiert und das Verzeichnis `/etc/hosts.d/` sowie die Datei `/usr/local/bin/block-tracker` gelöscht.
+Dabei wird die Datei `/usr/local/etc/block-tracker/hosts/system.hosts` wieder nach `/etc/hosts` kopiert und das Verzeichnis `/usr/local/etc/block-tracker/` sowie die Datei `/usr/local/bin/block-tracker` gelöscht.
 
 Nach der Installation muss
 ```
 sudo block-tracker --run
 ```
-ausgeführt werden, um die Blocklisten runterzuladen, in `/etc/hosts.d/` zu speichern
+ausgeführt werden, um die Blocklisten runterzuladen, in `/usr/local/etc/block-tracker/hosts/` zu speichern
 
 Um `block-tracker` vorübergehend zu deaktivieren, benutze
 ```
