@@ -7,3 +7,5 @@
 # A lot of Minecraft mods use these and if you block them, you can't download those mods
 adf.ly
 adfoc.us
+# Don't block urls which end with amazonaws.com
+.*amazonaws\.com
