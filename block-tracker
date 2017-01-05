@@ -22,8 +22,8 @@
 
 set -e -o pipefail -o errtrace                          # see https://sipb.mit.edu/doc/safe-shell/
 
-VERSION="v0.0.4 alpha"
-RELEASED=false
+VERSION="v0.0.4"
+RELEASED=true
 
 # various constants
 EXECUTABLE_NAME="block-tracker"                     # executable has hypen instead of underscore !!!
